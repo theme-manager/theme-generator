@@ -90,7 +90,7 @@ convertAndSaveAsCssForGtk() {
     uniq "/tmp/colors_cut.txt" | head -n "$num" > "/tmp/colors_hex.txt"
     
     declare -i index=0
-    echo "" > /tmp/generated-gtk.css
+    echo "" > "$output"generated-gtk.css
     while IFS= read -r hexCode; do
         echo "@define-color color${index} ${hexCode};" >> "$output"generated-gtk.css
         index+=1
@@ -110,7 +110,7 @@ convertAndSaveAsCssForHtml() {
     uniq "/tmp/colors_cut.txt" | head -n "$num" > "/tmp/colors_hex.txt"
 
     index=0
-    echo ":root {" > /tmp/generated-html.css
+    echo ":root {" > "$output"generated-html.css
     while IFS= read -r hexCode; do
         printf "\t--color%s: %s;\n" $index "$hexCode" >> "$output"generated-html.css
         index=$((index+=1))
