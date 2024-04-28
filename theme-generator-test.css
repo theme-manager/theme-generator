@@ -1,4 +1,4 @@
-@import 'output/generated-html.css';
+@import '/home/zweiler1/.config/theme-generator/generated-html.css';
 
 :root {
     --color-textColor: var(--color4);
@@ -13,8 +13,8 @@ body {
     font-size: 12pt;
     background-color: var(--color-backgroundColor);
     color: var(--color-textColor);
-    height: 80%;
-    width: 80%;
+    height: 100%;
+    width: 99%;
 }
 
 .highlight {
@@ -23,9 +23,3 @@ body {
     border-radius: 5px;
     height: 150px;
 }
-
-/* @define-color textColor #E1B964;
-@define-color hoverColor #D2BB8E;
-@define-color backgroundColor #3F3F3F;
-@define-color batteryCharging #0E6749;
-@define-color transparent rgba(0, 0, 0, 0); */
