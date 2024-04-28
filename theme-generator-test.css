@@ -1,0 +1,31 @@
+@import 'output/generated-html.css';
+
+:root {
+    --color-textColor: var(--color4);
+    --color-hoverColor: var(--color1);
+    --color-backgroundColor: var(--color0);
+    --color-border: var(--color3);
+    --color-transparent: rgba(0, 0, 0, 0);
+}
+
+body {
+    font-family: Tahoma, Verdana, Arial, sans-serif;
+    font-size: 12pt;
+    background-color: var(--color-backgroundColor);
+    color: var(--color-textColor);
+    height: 80%;
+    width: 80%;
+}
+
+.highlight {
+    background-color: var(--color-hoverColor);
+    border: 2px solid var(--color-border);
+    border-radius: 5px;
+    height: 150px;
+}
+
+/* @define-color textColor #E1B964;
+@define-color hoverColor #D2BB8E;
+@define-color backgroundColor #3F3F3F;
+@define-color batteryCharging #0E6749;
+@define-color transparent rgba(0, 0, 0, 0); */
