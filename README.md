@@ -14,7 +14,6 @@ Options: &emsp;&ensp;&nbsp;
 &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;h for html-css  
 &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;p for png  
 &emsp;-o&emsp;output&emsp;&ensp;Output directory. Default directory is $HOME/.config/theme-generator/output  
-&emsp;-h&emsp;--help&emsp;&emsp;Show this help message  
 
 ## Dependencies
 ImageMagick: [https://github.com/ImageMagick/ImageMagick](https://github.com/ImageMagick/ImageMagick)
