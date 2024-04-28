@@ -18,8 +18,6 @@ if [ "$1" == "" ] || [ "$1" == "-h" ] || [ "$1" == "--help" ]; then
     exit 0
 fi
 
-#echo "All arguments: " "$@"
-
 if ! [ -f "$1" ]; then
     echo "Specified image file does not exist"
     exit 1
@@ -33,7 +31,6 @@ format="g"
 
 checkOutputDir() {
     if [ -d "$1" ]; then 
-        #echo "$1 is a directory"
         output="$1"
     else
         echo "Specified output directory does not exist. Do you want to create the directory '$1'? (y/N)"
@@ -88,16 +85,16 @@ convertAndSaveAsCssForGtk() {
     convert "$srcImage" -geometry "${res}x${res}" -colors "$num" -unique-colors -scale 4000% "/tmp/colors.txt"
     tail -n +2 "/tmp/colors.txt" > "/tmp/colors_trim.txt"
     cut -d ' ' -f 4 "/tmp/colors_trim.txt" > "/tmp/colors_cut.txt" 
-    uniq "/tmp/colors_cut.txt" | head -n "$num" > "/tmp/colors_hex.txt"
+    uniq "/tmp/colors_cut.txt" | head -n "$num" > "${output}colors_hex.txt"
     
     declare -i index=0
     echo "" > "$output"generated-gtk.css
     while IFS= read -r hexCode; do
         echo "@define-color color${index} ${hexCode};" >> "$output"generated-gtk.css
         index+=1
-    done < <(cat /tmp/colors_hex.txt)
+    done < <(cat "${output}colors_hex.txt")
 
-    rm "/tmp/colors.txt" "/tmp/colors_trim.txt" "/tmp/colors_cut.txt" "/tmp/colors_hex.txt"
+    rm "/tmp/colors.txt" "/tmp/colors_trim.txt" "/tmp/colors_cut.txt"
 }
 
 convertAndSaveAsCssForHtml() {
@@ -105,16 +102,16 @@ convertAndSaveAsCssForHtml() {
     convert "$srcImage" -geometry "${res}x${res}" -colors "$num" -unique-colors -scale 4000% "/tmp/colors.txt"
     tail -n +2 "/tmp/colors.txt" > "/tmp/colors_trim.txt"
     cut -d ' ' -f 4 "/tmp/colors_trim.txt" > "/tmp/colors_cut.txt" 
-    uniq "/tmp/colors_cut.txt" | head -n "$num" > "/tmp/colors_hex.txt"
+    uniq "/tmp/colors_cut.txt" | head -n "$num" > "${output}colors_hex.txt"
 
     declare -i index=0
     echo ":root {" > "$output"generated-html.css
     while IFS= read -r hexCode; do
         printf "\t--color%s: %s;\n" $index "$hexCode" >> "$output"generated-html.css
         index+=1
-    done < <(cat /tmp/colors_hex.txt)
+    done < <(cat "${output}colors_hex.txt")
     echo "}" >> "$output"generated-html.css
-    rm "/tmp/colors.txt" "/tmp/colors_trim.txt" "/tmp/colors_cut.txt" "/tmp/colors_hex.txt"
+    rm "/tmp/colors.txt" "/tmp/colors_trim.txt" "/tmp/colors_cut.txt"
 }
 
 convertAndSaveAsPNG() {
