@@ -12,7 +12,8 @@ The installation is easy. Just put the shell script in your ```$HOME/.config/the
                                 g for gtk-css  
                                 h for html-css  
                                 p for png  
-                                t for text-file (will only work when combined with 'g' or 'h')
+                                r for rgb-text-file (will only work when combined with 'g' or 'h')
+                                t for hex-text-file (will only work when combined with 'g' or 'h')
         -n      count       Number of colors to extract from the image.  
                             The default value is 5.  
         -o      output      Output directory. Default directory is $HOME/.config/theme-generator/output  
