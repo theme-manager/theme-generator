@@ -9,7 +9,8 @@ if [ "$1" = "" ] || [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
     echo "                      p for png"
     echo "                      g for gtk-css"
     echo "                      h for html-css"
-    echo "                      t for text-file"
+    echo "                      t for hex-text-file"
+    echo "                      r for rgb-text-file"
     echo "  -h  --help      Show this help message"
     echo "  -n  count       number of colors to extract from the image."
     echo "                  The default value is 5."
@@ -29,7 +30,8 @@ fi
 res=256
 num=5
 format="g"
-saveTextFile=false
+saveHexFile=false
+saveRgbFile=false
 
 checkOutputDir() {
     if [ -d "$1" ]; then 
@@ -38,8 +40,10 @@ checkOutputDir() {
         echo "Specified output directory does not exist. Do you want to create the directory '$1'? (y/N)"
         read -r answer
         if [ "$answer" = "y" ] || [ "$answer" = "Y" ]; then
+            echo "$1"
             mkdir -p "$1" || echo "Failed to create directory $2" && exit 3
             output="$1"
+            echo "$output created"
         else 
             echo "Aborting..."
             exit 3
@@ -57,9 +61,7 @@ setNextFlag() {
     "-s") res="$2";;
     "-n") num="$2";;
     "-f") format="$2";;
-    "-o") 
-        echo "$1 $2" 
-        checkOutputDir "$2" ;;
+    "-o") checkOutputDir "$2" ;;
     *)
         echo "Invalid option ${1}"
         exit 2 ;;
@@ -82,53 +84,58 @@ if [ "$output" = "" ]; then
     checkOutputDir "$output"
 fi
 
-convertAndSaveAsCssForGtk() {
+createColorFilesInTmp() {
     echo "Converting image to .css file for gtk..."
     convert "$srcImage" -geometry "${res}x${res}" -colors "$num" -unique-colors -scale 4000% "/tmp/colors.txt"
     tail -n +2 "/tmp/colors.txt" > "/tmp/colors_trim.txt"
     cut -d ' ' -f 4 "/tmp/colors_trim.txt" > "/tmp/colors_cut.txt" 
     uniq "/tmp/colors_cut.txt" | head -n "$num" > "/tmp/colors_hex.txt"
-    
-    declare -i index=0
-    echo "" > "$output"generated-gtk.css
+}
+
+copyAndRemoveFilesFromTmp() {
+    if "$saveHexFile"; then
+        cp "/tmp/colors_hex.txt" "$output"colors-hex.txt
+    fi; if [ "$saveRgbFile" ]; then
+        cut -d ' ' -f 2 "/tmp/colors_trim.txt" > "/tmp/colors_rgb.txt"
+        uniq "/tmp/colors_rgb.txt" | head -n "$num" | sed "s/(//g" | sed "s/)//g" | sed "s/,/ /g" > "/tmp/colors_rgb_uniq.txt"
+        cp "/tmp/colors_rgb_uniq.txt" "$output"colors-rgb.txt
+    fi
+    rm "/tmp/colors.txt" "/tmp/colors_trim.txt" "/tmp/colors_cut.txt" "/tmp/colors_rgb.txt" "/tmp/colors_hex.txt" "/tmp/colors_rgb_uniq.txt"
+}
+
+convertAndSaveAsCssForGtk() {
+    createColorFilesInTmp
+
+    index=0
+    echo "" > "$output"colors-gtk.css
     while IFS= read -r hexCode; do
-        echo "@define-color color${index} ${hexCode};" >> "$output"generated-gtk.css
-        index+=1
+        echo "@define-color color${index} ${hexCode};" >> "$output"colors-gtk.css
+        index=$((index+=1))
     done < "/tmp/colors_hex.txt"
 
-    if "$saveTextFile"; then
-        cp "/tmp/colors_hex.txt" "$output"colors_hex.txt
-    fi
-    rm "/tmp/colors.txt" "/tmp/colors_trim.txt" "/tmp/colors_cut.txt"
+    copyAndRemoveFilesFromTmp
 }
 
 convertAndSaveAsCssForHtml() {
-    echo "Converting image to .css file for html..."
-    convert "$srcImage" -geometry "${res}x${res}" -colors "$num" -unique-colors -scale 4000% "/tmp/colors.txt"
-    tail -n +2 "/tmp/colors.txt" > "/tmp/colors_trim.txt"
-    cut -d ' ' -f 4 "/tmp/colors_trim.txt" > "/tmp/colors_cut.txt" 
-    uniq "/tmp/colors_cut.txt" | head -n "$num" > "/tmp/colors_hex.txt"
+    createColorFilesInTmp
 
     index=0
-    echo ":root {" > "$output"generated-html.css
+    echo ":root {" > "$output"colors-html.css
     while IFS= read -r hexCode; do
-        printf "\t--color%s: %s;\n" $index "$hexCode" >> "$output"generated-html.css
+        printf "\t--color%s: %s;\n" $index "$hexCode" >> "$output"colors-html.css
         index=$((index+=1))
     done < "/tmp/colors_hex.txt"
-    echo "}" >> "$output"generated-html.css
+    echo "}" >> "$output"colors-html.css
 
-    if "$saveTextFile"; then
-        cp "/tmp/colors_hex.txt" "$output"colors_hex.txt
-    fi
-    rm "/tmp/colors.txt" "/tmp/colors_trim.txt" "/tmp/colors_cut.txt"
+    copyAndRemoveFilesFromTmp
 }
 
 convertAndSaveAsPNG() {
     echo "Converting image to .png image..."
-    convert "$srcImage" -geometry "${res}x${res}" -colors "$num" -unique-colors -scale 4000% "$output"generated.png
+    convert "$srcImage" -geometry "${res}x${res}" -colors "$num" -unique-colors -scale 4000% "$output"colors.png
 }
 
-echo "$format, $res, $num, $output"
+#echo "$format, $res, $num, $output"
 
 # Does only execute one of the three functions, but all of them
 #case "$format" in
@@ -139,7 +146,9 @@ echo "$format, $res, $num, $output"
 #esac
 
 if [[ "$format" == *"t"* ]]; then
-    saveTextFile=true
+    saveHexFile=true
+fi; if [[ "$format" == *"r"* ]]; then
+    saveRgbFile=true
 fi; if [[ "$format" == *"g"* ]]; then
     convertAndSaveAsCssForGtk "$res" "$num"
 fi; if [[ "$format" == *"h"* ]]; then
