@@ -135,24 +135,14 @@ convertAndSaveAsPNG() {
     convert "$srcImage" -geometry "${res}x${res}" -colors "$num" -unique-colors -scale 4000% "$output"colors.png
 }
 
-#echo "$format, $res, $num, $output"
-
-# Does only execute one of the three functions, but all of them
-#case "$format" in
-#*g*) convertAndSaveAsCssForGtk "$res" "$num" ;;
-#*h*) convertAndSaveAsCssForHtml "$res" "$num" ;;
-#*p*) convertAndSaveAsPNG "$res" "$num" ;;
-#*) echo "Invalid format" ;;
-#esac
-
-if [[ "$format" == *"t"* ]]; then
+if [ "$format" = "${*"t"*}" ]; then
     saveHexFile=true
-fi; if [[ "$format" == *"r"* ]]; then
+fi; if echo "$format" | grep -q "r"; then
     saveRgbFile=true
-fi; if [[ "$format" == *"g"* ]]; then
+fi; if echo "$format" | grep -q "g"; then
     convertAndSaveAsCssForGtk "$res" "$num"
-fi; if [[ "$format" == *"h"* ]]; then
+fi; if echo "$format" | grep -q "h"; then
     convertAndSaveAsCssForHtml "$res" "$num"
-fi; if [[ "$format" == *"p"* ]]; then
+fi; if echo "$format" | grep -q "p"; then
     convertAndSaveAsPNG "$res" "$num"
 fi
