@@ -135,7 +135,7 @@ convertAndSaveAsPNG() {
     convert "$srcImage" -geometry "${res}x${res}" -colors "$num" -unique-colors -scale 4000% "$output"colors.png
 }
 
-if [ "$format" = "${*"t"*}" ]; then
+if echo "$format" | grep -q "h"; then
     saveHexFile=true
 fi; if echo "$format" | grep -q "r"; then
     saveRgbFile=true
@@ -146,3 +146,5 @@ fi; if echo "$format" | grep -q "h"; then
 fi; if echo "$format" | grep -q "p"; then
     convertAndSaveAsPNG "$res" "$num"
 fi
+echo "${output}/../wallpaper.png"
+cp "$srcImage" "${output}wallpaper.png"
