@@ -38,7 +38,6 @@ fi
 
 res=256
 num=5
-format="g"
 saveHexFile=false
 saveRgbFile=false
 
@@ -50,7 +49,7 @@ checkOutputDir() {
         read -r answer
         if [ "$answer" = "y" ] || [ "$answer" = "Y" ]; then
             echo "$1"
-            mkdir -p "$1" || echo "Failed to create directory $2" && exit 3
+            mkdir -p "$1" || echo "Failed to create directory '$2'" && exit 3
             output="$1"
             echo "$output created"
         else 
@@ -61,7 +60,6 @@ checkOutputDir() {
 }
 
 createColorFilesInTmp() {
-    echo "Converting image to .css file for gtk..."
     convert "$srcImage" -geometry "${res}x${res}" -colors "$num" -unique-colors -scale 4000% "/tmp/colors.txt"
     tail -n +2 "/tmp/colors.txt" > "/tmp/colors_trim.txt"
     cut -d ' ' -f 4 "/tmp/colors_trim.txt" > "/tmp/colors_cut.txt" 
@@ -80,6 +78,7 @@ copyAndRemoveFilesFromTmp() {
 }
 
 convertAndSaveAsCssForGtk() {
+    echo "Converting image to .css file for gtk..."
     createColorFilesInTmp
 
     index=0
@@ -93,6 +92,7 @@ convertAndSaveAsCssForGtk() {
 }
 
 convertAndSaveAsCssForHtml() {
+    echo "Converting image to .css file for html..."
     createColorFilesInTmp
 
     index=0
@@ -119,40 +119,36 @@ fi
 
 while [ "$#" -gt 0 ]; do
     case "$1" in
-        "-s")   if [ "$2" != "" ]; then 
+        -h|--help) printUsage; exit 0 ;;
+        -s)   if [ "$2" != "" ]; then 
                     res="$2"
                     shift 2
                 else 
-                    echo "Option $1 requires an argument";
+                    echo "Option '$1' requires an argument";
                     exit 2
                 fi ;;
-        "-n")   if [ "$2" != "" ]; then 
+        -n)   if [ "$2" != "" ]; then 
                     num="$2"
                     shift 2
                 else 
-                    echo "Option $1 requires an argument" 
+                    echo "Option '$1' requires an argument" 
                     exit 2
                 fi ;;
-        "-f")   if [ "$2" != "" ]; then 
-                    if echo "$format" | grep -q "h"; then
-                        saveHexFile=true
-                    fi; if echo "$format" | grep -q "r"; then
-                        saveRgbFile=true
-                    fi; if echo "$format" | grep -q "g"; then
-                        convertAndSaveAsCssForGtk "$res" "$num"
-                    fi; if echo "$format" | grep -q "h"; then
-                        convertAndSaveAsCssForHtml "$res" "$num"
-                    fi; if echo "$format" | grep -q "p"; then
-                        convertAndSaveAsPNG "$res" "$num"
-                    fi
+        -f)   if [ "$2" != "" ]; then 
+                    echo
+                    echo "$2" | grep -q "h" && saveHexFile=true
+                    echo "$2" | grep -q "r" && saveRgbFile=true
+                    echo "$2" | grep -q "g" && convertAndSaveAsCssForGtk "$res" "$num"
+                    echo "$2" | grep -q "h" && convertAndSaveAsCssForHtml "$res" "$num"
+                    echo "$2" | grep -q "p" && convertAndSaveAsPNG "$res" "$num"
                     shift 2
                 else 
-                    echo "Option $1 requires at least one argument";
+                    echo "Option '$1' requires at least one argument";
                     exit 2
                 fi ;;
-        "-o") checkOutputDir "$2" ;;
+        -o) checkOutputDir "$2"; shift 2 ;;
         *)
-            echo "Invalid option ${1}"
+            echo "Invalid option: '$1'"
             exit 2 ;;
     esac
 done
