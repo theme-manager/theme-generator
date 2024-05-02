@@ -1,24 +1,32 @@
 #!/bin/sh
 
-if [ "$1" = "" ] || [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
-    echo "Usage:"
-    echo "  theme-generator.sh [IMAGE_PATH] [OPTIONS]"
-    echo ""
-    echo "Options:"
-    echo "  -f  formats     Output format Option. Default value is g. Can be multiple values"
-    echo "                      g for gtk-css"
-    echo "                      h for html-css"
-    echo "                      p for png"
-    echo "                      r for rgb-text-file"
-    echo "                      t for hex-text-file"
-    echo "  -h  --help      Show this help message"
-    echo "  -n  count       number of colors to extract from the image."
-    echo "                  The default value is 5."
-    echo "  -o  output      Output directory. Default directory is $HOME/.config/theme-generator/output"
-    echo "  -s  size        Size to which the image gets compromized before extracting colors."
-    echo "                  The default value is 256. Values should be a power of 2 and ge 64 for best results."
-    exit 0
-fi
+printUsage() {
+    echo "Usage:
+    theme-generator.sh [IMAGE_PATH] [OPTIONS]
+    
+Options:
+    -h  --help              Show this help message
+    -n          <number>    number of colors to extract from the image.
+                            The default value is 5.
+    -o          <output>    Output directory. Default directory is $HOME/.config/theme-generator/output
+    -s          <size>      Size to which the image gets compromized before extracting colors.
+                            The default value is 256. Values should be a power of 2 and ge 64 for best results.
+    -f          [formats]   Output format Option. Default value is g. Can be multiple values
+                                g for gtk-css
+                                h for html-css
+                                p for png
+                                r for rgb-text-file
+                                t for hex-text-file"
+}
+
+# error codes
+# 0 - success
+# 1 - missing argument(s)
+# 2 - wrong argument(s)
+# 3 - missing dependecy
+# 4 - wrong configuration file
+# 5 - internal error
+
 
 if ! [ -f "$1" ]; then
     echo "Specified image file does not exist"
@@ -103,6 +111,11 @@ convertAndSaveAsPNG() {
     convert "$srcImage" -geometry "${res}x${res}" -colors "$num" -unique-colors -scale 4000% "$output"colors.png
 }
 
+if [ "$output" = "" ]; then
+    output="$HOME/.config/theme-generator/"
+    echo "Using the default output directory: $output"
+    checkOutputDir "$output"
+fi
 
 while [ "$#" -gt 0 ]; do
     case "$1" in
@@ -144,11 +157,11 @@ while [ "$#" -gt 0 ]; do
     esac
 done
 
-if [ "$output" = "" ]; then
-    output="$HOME/.config/theme-generator/"
-    echo "Using the default output directory: $output"
-    checkOutputDir "$output"
-fi
+[ $saveHexFile ] && echo "Saving colors as hex in text file..."
+[ $saveRgbFile ] && echo "Saving colors as rgb in text file..." 
+echo
 
 fileFormat=$(echo "$srcImage" | rev | cut -d '/' -f1 | cut -d '.' -f1 | rev)
-cp "$srcImage" "${output}../Wallpaper/wallpaper.$fileFormat"
+rm -r "${output:?}../Wallpaper/"
+mkdir -p "$output../Wallpaper"
+cp "$srcImage" "$output../Wallpaper/wallpaper.$fileFormat"
