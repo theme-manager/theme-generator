@@ -25,6 +25,7 @@ if ! [ -f "$1" ]; then
     exit 1
 else 
     srcImage="$1"
+    shift
 fi
 
 res=256
@@ -50,39 +51,6 @@ checkOutputDir() {
         fi
     fi
 }
-
-
-setNextFlag() {
-    if [ "$2" = "" ]; then
-        echo "Option ${1} requires an argument"
-        exit 2
-    fi
-    case "$1" in
-    "-s") res="$2";;
-    "-n") num="$2";;
-    "-f") format="$2";;
-    "-o") checkOutputDir "$2" ;;
-    *)
-        echo "Invalid option ${1}"
-        exit 2 ;;
-    esac 
-}
-
-if [ "$2" != "" ]; then
-    setNextFlag "$2" "$3"
-fi; if [ "$4" != "" ]; then
-    setNextFlag "$4" "$5"
-fi; if [ "$6" != "" ]; then
-    setNextFlag "$6" "$7"
-fi; if [ "$8" != "" ]; then
-    setNextFlag "$8" "$9"
-fi
-
-if [ "$output" = "" ]; then
-    output="$HOME/.config/theme-generator/"
-    echo "Using the default output directory: $output"
-    checkOutputDir "$output"
-fi
 
 createColorFilesInTmp() {
     echo "Converting image to .css file for gtk..."
@@ -135,16 +103,52 @@ convertAndSaveAsPNG() {
     convert "$srcImage" -geometry "${res}x${res}" -colors "$num" -unique-colors -scale 4000% "$output"colors.png
 }
 
-if echo "$format" | grep -q "h"; then
-    saveHexFile=true
-fi; if echo "$format" | grep -q "r"; then
-    saveRgbFile=true
-fi; if echo "$format" | grep -q "g"; then
-    convertAndSaveAsCssForGtk "$res" "$num"
-fi; if echo "$format" | grep -q "h"; then
-    convertAndSaveAsCssForHtml "$res" "$num"
-fi; if echo "$format" | grep -q "p"; then
-    convertAndSaveAsPNG "$res" "$num"
+
+while [ "$#" -gt 0 ]; do
+
+    case "$1" in
+        "-s")   if [ "$2" != "" ]; then 
+                    res="$2"
+                    shift 2
+                else 
+                    echo "Option $1 requires an argument";
+                    exit 2
+                fi ;;
+        "-n")   if [ "$2" != "" ]; then 
+                    num="$2"
+                    shift 2
+                else 
+                    echo "Option $1 requires an argument" 
+                    exit 2
+                fi ;;
+        "-f")   if [ "$2" != "" ]; then 
+                    if echo "$format" | grep -q "h"; then
+                        saveHexFile=true
+                    fi; if echo "$format" | grep -q "r"; then
+                        saveRgbFile=true
+                    fi; if echo "$format" | grep -q "g"; then
+                        convertAndSaveAsCssForGtk "$res" "$num"
+                    fi; if echo "$format" | grep -q "h"; then
+                        convertAndSaveAsCssForHtml "$res" "$num"
+                    fi; if echo "$format" | grep -q "p"; then
+                        convertAndSaveAsPNG "$res" "$num"
+                    fi
+                    shift 2
+                else 
+                    echo "Option $1 requires at least one argument";
+                    exit 2
+                fi ;;
+        "-o") checkOutputDir "$2" ;;
+        *)
+            echo "Invalid option ${1}"
+            exit 2 ;;
+    esac
+done
+
+if [ "$output" = "" ]; then
+    output="$HOME/.config/theme-generator/"
+    echo "Using the default output directory: $output"
+    checkOutputDir "$output"
 fi
 
 fileFormat=$(echo "$srcImage" | rev | cut -d '/' -f1 | cut -d '.' -f1 | rev)
