@@ -131,7 +131,7 @@ convertAndSaveAsCssForHtml() {
 }
 
 convertAndSaveAsPNG() {
-    echo "Converting image to .png image..."
+    echo "Converting image to theme color stripe..."
     convert "$srcImage" -geometry "${res}x${res}" -colors "$num" -unique-colors -scale 4000% "$output"colors.png
 }
 
@@ -146,5 +146,6 @@ fi; if echo "$format" | grep -q "h"; then
 fi; if echo "$format" | grep -q "p"; then
     convertAndSaveAsPNG "$res" "$num"
 fi
-echo "${output}/../wallpaper.png"
-cp "$srcImage" "${output}wallpaper.png"
+
+fileFormat=$(echo "$srcImage" | rev | cut -d '/' -f1 | cut -d '.' -f1 | rev)
+cp "$srcImage" "${output}../Wallpaper/wallpaper.$fileFormat"
