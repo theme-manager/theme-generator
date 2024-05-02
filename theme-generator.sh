@@ -105,7 +105,6 @@ convertAndSaveAsPNG() {
 
 
 while [ "$#" -gt 0 ]; do
-
     case "$1" in
         "-s")   if [ "$2" != "" ]; then 
                     res="$2"
