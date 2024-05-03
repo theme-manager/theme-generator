@@ -8,7 +8,7 @@ Options:
     -h  --help              Show this help message
     -n          <number>    number of colors to extract from the image.
                             The default value is 5.
-    -o          <output>    Output directory. Default directory is $HOME/.config/theme-generator/output
+    -o          <output>    Output directory. Default directory is $HOME/.config/theme-manager/output
     -s          <size>      Size to which the image gets compromized before extracting colors.
                             The default value is 256. Values should be a power of 2 and ge 64 for best results.
     -f          [formats]   Output format Option. Default value is g. Can be multiple values
@@ -51,7 +51,7 @@ checkOutputDir() {
             echo "$1"
             mkdir -p "$1" || echo "Failed to create directory '$2'" && exit 3
             output="$1"
-            echo "$output created"
+            echo "Directory created"
         else 
             echo "Aborting..."
             exit 3
@@ -112,7 +112,7 @@ convertAndSaveAsPNG() {
 }
 
 if [ "$output" = "" ]; then
-    output="$HOME/.config/theme-generator/"
+    output="$HOME/.config/theme-manager/output/"
     echo "Using the default output directory: $output"
     checkOutputDir "$output"
 fi

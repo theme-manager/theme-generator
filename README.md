@@ -2,7 +2,7 @@
 Shell script which extracts colors from image and saves the hex codes as an color palette image, .css file to use with html or .css file to use with gtk. Also saves a text-file containing all extracted hex-codes.
 
 ## Installation
-The installation is easy. Just put the shell script in your ```$HOME/.config/theme-generator``` directory.
+The installation is easy. Just put the shell script in your ```$HOME/.config/theme-manager``` directory.
 
 ## Usage
     theme-generator.sh [IMAGE_PATH] [OPTIONS]
