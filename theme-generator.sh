@@ -40,6 +40,7 @@ res=256
 num=5
 saveHexFile=false
 saveRgbFile=false
+output="$HOME/.config/theme-manager/output/"
 
 checkOutputDir() {
     if [ -d "$1" ]; then 
@@ -68,7 +69,7 @@ createColorFilesInTmp() {
 
 copyAndRemoveFilesFromTmp() {
     if "$saveHexFile"; then
-        cp "/tmp/colors_hex.txt" "$output"colors-hex.txt
+        cp "/tmp/colors_hex.txt" "${output}colors/colors-hex.txt"
     fi; if [ "$saveRgbFile" ]; then
         cut -d ' ' -f 2 "/tmp/colors_trim.txt" > "/tmp/colors_rgb.txt"
         uniq "/tmp/colors_rgb.txt" | head -n "$num" | sed "s/(//g" | sed "s/)//g" | sed "s/,/ /g" > "/tmp/colors_rgb_uniq.txt"
@@ -78,13 +79,13 @@ copyAndRemoveFilesFromTmp() {
 }
 
 convertAndSaveAsCssForGtk() {
-    echo "Converting image to .css file for gtk..."
+    echo " - Converting image to .css file for gtk..."
     createColorFilesInTmp
 
     index=0
     echo "" > "$output"colors-gtk.css
     while IFS= read -r hexCode; do
-        echo "@define-color color${index} ${hexCode};" >> "$output"colors-gtk.css
+        echo "@define-color color${index} ${hexCode};" >> "${output}colors/colors-gtk.css"
         index=$((index+=1))
     done < "/tmp/colors_hex.txt"
 
@@ -92,7 +93,7 @@ convertAndSaveAsCssForGtk() {
 }
 
 convertAndSaveAsCssForHtml() {
-    echo "Converting image to .css file for html..."
+    echo " - Converting image to .css file for html..."
     createColorFilesInTmp
 
     index=0
@@ -101,21 +102,15 @@ convertAndSaveAsCssForHtml() {
         printf "\t--color%s: %s;\n" $index "$hexCode" >> "$output"colors-html.css
         index=$((index+=1))
     done < "/tmp/colors_hex.txt"
-    echo "}" >> "$output"colors-html.css
+    echo "}" >> "${output}colors/colors-html.css"
 
     copyAndRemoveFilesFromTmp
 }
 
 convertAndSaveAsPNG() {
-    echo "Converting image to theme color stripe..."
-    convert "$srcImage" -geometry "${res}x${res}" -colors "$num" -unique-colors -scale 4000% "$output"colors.png
+    echo " - Converting image to theme color stripe..."
+    convert "$srcImage" -geometry "${res}x${res}" -colors "$num" -unique-colors -scale 4000% "${output}colors/colors.png"
 }
-
-if [ "$output" = "" ]; then
-    output="$HOME/.config/theme-manager/output/"
-    echo "Using the default output directory: $output"
-    checkOutputDir "$output"
-fi
 
 while [ "$#" -gt 0 ]; do
     case "$1" in
@@ -135,7 +130,6 @@ while [ "$#" -gt 0 ]; do
                     exit 2
                 fi ;;
         -f)   if [ "$2" != "" ]; then 
-                    echo
                     echo "$2" | grep -q "h" && saveHexFile=true
                     echo "$2" | grep -q "r" && saveRgbFile=true
                     echo "$2" | grep -q "g" && convertAndSaveAsCssForGtk "$res" "$num"
@@ -153,11 +147,12 @@ while [ "$#" -gt 0 ]; do
     esac
 done
 
-[ $saveHexFile ] && echo "Saving colors as hex in text file..."
-[ $saveRgbFile ] && echo "Saving colors as rgb in text file..." 
-echo
+[ $saveHexFile ] && echo " - Saving colors as hex in text file..."
+[ $saveRgbFile ] && echo " - Saving colors as rgb in text file..." 
 
 fileFormat=$(echo "$srcImage" | rev | cut -d '/' -f1 | cut -d '.' -f1 | rev)
-rm -r "${output:?}../Wallpaper/"
-mkdir -p "$output../Wallpaper"
-cp "$srcImage" "$output../Wallpaper/wallpaper.$fileFormat"
+if [ -d "${output}Wallpaper/" ]; then
+    rm -r "${output:?}Wallpaper/"
+fi
+mkdir -p "${output}Wallpaper"
+cp "$srcImage" "${output}Wallpaper/wallpaper.$fileFormat"
