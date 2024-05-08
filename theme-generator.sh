@@ -73,7 +73,7 @@ copyAndRemoveFilesFromTmp() {
     fi; if [ "$saveRgbFile" ]; then
         cut -d ' ' -f 2 "/tmp/colors_trim.txt" > "/tmp/colors_rgb.txt"
         uniq "/tmp/colors_rgb.txt" | head -n "$num" | sed "s/(//g" | sed "s/)//g" | sed "s/,/ /g" > "/tmp/colors_rgb_uniq.txt"
-        cp "/tmp/colors_rgb_uniq.txt" "$output"colors-rgb.txt
+        cp "/tmp/colors_rgb_uniq.txt" "${output}colors/"colors-rgb.txt
     fi
     rm "/tmp/colors.txt" "/tmp/colors_trim.txt" "/tmp/colors_cut.txt" "/tmp/colors_rgb.txt" "/tmp/colors_hex.txt" "/tmp/colors_rgb_uniq.txt"
 }
@@ -81,9 +81,9 @@ copyAndRemoveFilesFromTmp() {
 convertAndSaveAsCssForGtk() {
     echo " - Converting image to .css file for gtk..."
     createColorFilesInTmp
-
+    
     index=0
-    echo "" > "$output"colors-gtk.css
+    echo "" > "${output}colors/colors-gtk.css"
     while IFS= read -r hexCode; do
         echo "@define-color color${index} ${hexCode};" >> "${output}colors/colors-gtk.css"
         index=$((index+=1))
@@ -97,9 +97,9 @@ convertAndSaveAsCssForHtml() {
     createColorFilesInTmp
 
     index=0
-    echo ":root {" > "$output"colors-html.css
+    echo ":root {" > "${output}colors/colors-html.css"
     while IFS= read -r hexCode; do
-        printf "\t--color%s: %s;\n" $index "$hexCode" >> "$output"colors-html.css
+        printf "\t--color%s: %s;\n" $index "$hexCode" >> "${output}colors/colors-html.css"
         index=$((index+=1))
     done < "/tmp/colors_hex.txt"
     echo "}" >> "${output}colors/colors-html.css"

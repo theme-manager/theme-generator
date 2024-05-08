@@ -1,4 +1,4 @@
-@import '/home/zweiler1/.config/themes/active/colors/colors-html.css';
+@import '/home/zweiler1/.config/theme-manager/themes/active/colors/colors-html.css';
 
 :root {
     --color-textColor: var(--color4);
