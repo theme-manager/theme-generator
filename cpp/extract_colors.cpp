@@ -23,12 +23,19 @@ int main(int argc, char* argv[])
         return 1;
     }
     
-    Image image = extract_colors(argv[1]);
+    Image image = loadImage(argv[1]);
     // check if image is null
     if(image.data.size() == 0 || image.data.at(0).size() == 0) {
         std::cout << "Error extracting colors" << std::endl;
         return 1;
     }
+
+    // Get the hue distribution
+    HueMap hueDistribution = getHueDistribution(image);
+    printHueDistribution(hueDistribution);
+
+    // Sort the hue distribution by how often a specific hue occurs
+    std::vector<HueCount> hueCount = getSortedHueCounts(hueDistribution);
 
     return 0;
 }
