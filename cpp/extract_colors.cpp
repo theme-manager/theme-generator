@@ -38,7 +38,6 @@ int main(int argc, char* argv[])
     std::vector<HueCount> sortedCounts = getSortedHueCounts(hueDistribution, 0, SORT_BY::COUNT);
     std::vector<HueCount> sortedHues = getSortedHueCounts(hueDistribution, 0, SORT_BY::HUE);
 
-    //printSortedHueCounts(hueCount_0);
     std::cout << "Hue Count: " << sortedCounts.size() << std::endl;
     int increment = 5;
     std::cout << "Hues percentages in " << increment << "\% increments sorted by their count:" << std::endl;
@@ -47,7 +46,7 @@ int main(int argc, char* argv[])
             getHuePercentRange(sortedCounts,  i * increment, i * increment + increment) << "°" << std::endl;
     }
 
-    std::cout << "Hues percentages in " << increment << "\% increments sorted by their hues:" << std::endl;
+    std::cout << "\nHues percentages in " << increment << "\% increments sorted by their hues:" << std::endl;
     for(int i = 0; i < 100/increment; i++) {
         std::cout << "Hue from " << i * increment << "\% to " << i * increment + increment << "\%: " << 
             getHuePercentRange(sortedHues,  i * increment, i * increment + increment) << "°" << std::endl;

@@ -160,21 +160,15 @@ float getHuePercentRange(std::vector<HueCount>& map, int fromPercent, int toPerc
 
 std::vector<HueCount> getSortedHueCounts(HueMap& map, int minValue, SORT_BY sorter) {
     std::vector<HueCount> hueCount;
-    // fill the array
-    int hueCountSize = 0;
-    for (std::pair<float, int> map_i : map) {
-        if (map_i.second > minValue) {
-            hueCount.push_back(HueCount { map_i.first, map_i.second });
-            hueCountSize++;
-        }
-    }
 
     // sort the array
     if(sorter == SORT_BY::COUNT) {
+        hueCount = getHueCountArrayFromMap(map, minValue);
         countingSortByCount(hueCount);
     } else if(sorter == SORT_BY::HUE) {
-        countingSortByHue(hueCount);
+        hueCount = countingSortByHue(map);
     }
+    
     return hueCount;
 }
 
