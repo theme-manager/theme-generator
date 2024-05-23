@@ -10,6 +10,7 @@ extern "C" {
 
 typedef std::map<float, int> HueMap;
 typedef std::pair<float, int> HueCount;
+enum SORT_BY { HUE, COUNT };
 
 struct Pixel {
 public:

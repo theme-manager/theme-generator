@@ -3,7 +3,6 @@
 #include <vector>
 #include <map>
 
-#include "types.hpp"
 #include "sorter.hpp"
 
 /**
@@ -142,17 +141,40 @@ HueMap getHueDistribution(Image& image) {
     return hueDistribution;
 }
 
-std::vector<HueCount> getSortedHueCounts(HueMap& map) {
+float getHuePercentRange(std::vector<HueCount>& map, int fromPercent, int toPercent) {
+    if(fromPercent > 100 || toPercent > 100 || fromPercent < 0 || toPercent < 0 || fromPercent > toPercent) {
+        return 0.0f;
+    }
+
+    float sum = 0.0f;
+    int rangePercent = toPercent - fromPercent;
+    int range = (map.size() * rangePercent) / 100;
+    int min = (map.size() * fromPercent) / 100;
+    int max = (map.size() * toPercent) / 100;
+
+    for(int i = min; i <= max; i++) {
+        sum += map[i].first;
+    }
+    return sum / range;
+}
+
+std::vector<HueCount> getSortedHueCounts(HueMap& map, int minValue, SORT_BY sorter) {
     std::vector<HueCount> hueCount;
     // fill the array
-    for (auto it = map.begin(); it != map.end(); it++) {
-        if(it->second > 10)
-            hueCount.push_back(HueCount(it->first, it->second));
+    int hueCountSize = 0;
+    for (std::pair<float, int> map_i : map) {
+        if (map_i.second > minValue) {
+            hueCount.push_back(HueCount { map_i.first, map_i.second });
+            hueCountSize++;
+        }
     }
 
     // sort the array
-    sortHueCount(hueCount);
-
+    if(sorter == SORT_BY::COUNT) {
+        countingSortByCount(hueCount);
+    } else if(sorter == SORT_BY::HUE) {
+        countingSortByHue(hueCount);
+    }
     return hueCount;
 }
 
@@ -160,5 +182,11 @@ std::vector<HueCount> getSortedHueCounts(HueMap& map) {
 void printHueDistribution(HueMap& map) {
     for (auto it = map.begin(); it != map.end(); it++) {
         std::cout << "Hue: " << it->first << "°, \t\tCount: " << it->second << std::endl;
+    }
+}
+
+void printSortedHueCounts(std::vector<HueCount>& hueCount) {
+    for (int i = 0; i < hueCount.size(); i++) {
+        std::cout << "Hue: " << hueCount.at(i).first << "°, \t\tCount: " << hueCount.at(i).second << std::endl;
     }
 }

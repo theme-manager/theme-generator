@@ -32,10 +32,26 @@ int main(int argc, char* argv[])
 
     // Get the hue distribution
     HueMap hueDistribution = getHueDistribution(image);
-    printHueDistribution(hueDistribution);
+    //printHueDistribution(hueDistribution);
 
     // Sort the hue distribution by how often a specific hue occurs
-    std::vector<HueCount> hueCount = getSortedHueCounts(hueDistribution);
+    std::vector<HueCount> sortedCounts = getSortedHueCounts(hueDistribution, 0, SORT_BY::COUNT);
+    std::vector<HueCount> sortedHues = getSortedHueCounts(hueDistribution, 0, SORT_BY::HUE);
+
+    //printSortedHueCounts(hueCount_0);
+    std::cout << "Hue Count: " << sortedCounts.size() << std::endl;
+    int increment = 5;
+    std::cout << "Hues percentages in " << increment << "\% increments sorted by their count:" << std::endl;
+    for(int i = 0; i < 100/increment; i++) {
+        std::cout << "Hue from " << i * increment << "\% to " << i * increment + increment << "\%: " << 
+            getHuePercentRange(sortedCounts,  i * increment, i * increment + increment) << "°" << std::endl;
+    }
+
+    std::cout << "Hues percentages in " << increment << "\% increments sorted by their hues:" << std::endl;
+    for(int i = 0; i < 100/increment; i++) {
+        std::cout << "Hue from " << i * increment << "\% to " << i * increment + increment << "\%: " << 
+            getHuePercentRange(sortedHues,  i * increment, i * increment + increment) << "°" << std::endl;
+    }
 
     return 0;
 }
