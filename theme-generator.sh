@@ -27,7 +27,6 @@ Options:
 # 4 - wrong configuration file
 # 5 - internal error
 
-
 if ! [ -f "$1" ]; then
     echo "Specified image file does not exist"
     exit 1
@@ -41,6 +40,8 @@ num=5
 saveHexFile=false
 saveRgbFile=false
 output="$HOME/.config/theme-manager/output/"
+
+which convert >/dev/null 2>&1 || { echo "Error: ImageMagick CLI tools not found" >&2; exit 1; }
 
 checkOutputDir() {
     if [ -d "$1" ]; then 
