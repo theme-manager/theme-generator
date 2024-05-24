@@ -89,8 +89,7 @@ HSV getHsvFromRgb(RGB rgb) {
     float min = std::min(r, std::min(g, b));
     float delta = max - min;
 
-    float h = 0.0f;
-    float s = 0.0f;
+    float h = 0.0f, s = 0.0f;
     float v = max;
 
     if (delta < 0.00001f) {
@@ -271,14 +270,14 @@ float getPercentRange(std::vector<HsvCount>& map, int fromPercent, int toPercent
     }
 }
 
-float getAverageHue(std::vector<HsvCount>& hueCount) {
+HsvCount getAverageHue(std::vector<HsvCount>& hueCount) {
     float sum = 0.0f;
     int count = 0;
     for(HsvCount hC : hueCount) {
         sum += std::get<0>(hC.first) * hC.second;
         count += hC.second;
     }
-    return sum / count;
+    return HsvCount { HSV { sum / count, 1, 1}, count };
 }
 
 std::vector<HsvCount> getSortedHueCounts(HsvMap& map, int minValue, SORT_BY sorter) {

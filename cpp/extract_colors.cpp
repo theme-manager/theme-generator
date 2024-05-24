@@ -26,6 +26,20 @@ void printHueCountWithIncrement(std::vector<HsvCount>& hsvCount, int increment, 
     }
 }
 
+void printHueCountGroups(std::vector<HsvCount>& hsvCount, int groupSize) {
+    std::cout << "\nCount of Hues in groups of size " << groupSize << "°" << std::endl;
+    int index = 0;
+    for(int i = 0; i < 360; i += groupSize) {
+        std::vector<HsvCount> group;
+        while(index < hsvCount.size() && std::get<0>(hsvCount.at(index).first) <= i + groupSize) {
+            group.push_back(hsvCount.at(index));
+            index++;
+        }
+        HsvCount averageHue = getAverageHue(group);
+        std::cout << "\tHue from " << i << "° to " << i + groupSize << "°: \taverage: " << std::get<0>(averageHue.first) << "° \tcount: " << averageHue.second << std::endl;
+    }
+}
+
 /**
  * @brief 
  * 
@@ -59,25 +73,27 @@ int main(int argc, char* argv[])
     //printHueDistribution(hueDistribution);
 
     // Sort the hue distribution by how often a specific hue occurs
-    std::vector<HsvCount> sortedCounts = getSortedHueCounts(hueDistribution, 0, SORT_BY::COUNT);
-    std::vector<HsvCount> sortedHues = getSortedHueCounts(hueDistribution, 0, SORT_BY::HUE);
-
+    std::vector<HsvCount> sortedCounts = getSortedHueCounts(hueDistribution, 20, SORT_BY::COUNT);
+    std::vector<HsvCount> sortedHues = getSortedHueCounts(hueDistribution, 20, SORT_BY::HUE);
 
     std::cout << "Hue Count: " << sortedCounts.size() << std::endl;
-    std::cout << "Average hue normalized by the colors count: " << getAverageHue(sortedCounts) << "°" << std::endl;
-    int increment = 5;
+    std::cout << "Average hue normalized by the colors count: " << std::get<0>(getAverageHue(sortedCounts).first) << "°" << std::endl;
+    
+    if(false) {
+        int increment = 5;
+        int input;
+        std::cout << "\nPlease enter the increment percentage to display: ";
+        std::cin >> input;
+        if(input > 0 && input <= 100) increment = input;
 
-    int input;
-    std::cout << "\nPlease enter the increment percentage to display: ";
-    std::cin >> input;
-    if(input > 0 && input <= 100) increment = input;
+        // Print the sorted vectors sorted by counts and hues
+        printHueCountWithIncrement(sortedCounts, increment, "Counts", 35);
+        printHueCountWithIncrement(sortedHues, increment, "Hues", 35);
 
-    // Print the sorted vectors sorted by counts and hues
-    printHueCountWithIncrement(sortedCounts, increment, "Counts", 35);
-    printHueCountWithIncrement(sortedHues, increment, "Hues", 35);
+        std::cout << std::endl;
+    }
 
-    std::cout << std::endl;
-
+    printHueCountGroups(sortedHues, 5);
     //printSortedHueCounts(sortedHues, 50);
 
     //std::cout << "Hue 120° 10 Steps: " << getColorBar(77, 10) << getUnixNoColor() << std::endl;
