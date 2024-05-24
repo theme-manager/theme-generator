@@ -122,17 +122,23 @@ HSV getHsvFromRgb(RGB rgb) {
     return HSV { h, s, v };
 }
 
-std::string getColorBar(float hue, int length) {
+std::string getColorBar(float hue, int length, float hueValue = 1.0f) {
+    //std::cout << "\t[hue:" << hue << "][length:" << length << "]\t";
+    if(length <= 0) {
+        length = 1;
+    }
+
     int r, g, b;
-    int increment = 100 / length;
+    float increment = 100 / (float)length;
     std::string output = "";
-    for(int i = 0; i < 100; i+=increment) {
-        std::tuple rgb = getRgbFromHsv(HSV { hue, 1.0f, (float)i / 100.0f });
+    float i = 0;
+    while(i < 100) {
+        std::tuple rgb = getRgbFromHsv(HSV { hue, hueValue, 1.0f });
         int r = std::get<0>(rgb);
         int g = std::get<1>(rgb);
         int b = std::get<2>(rgb);
         output += getUnixColorCode(r, g, b) + "#";
-        //output += getUnixColorCode(r, g, b) + " " + std::to_string(r) + ", " + std::to_string(g) + ", " + std::to_string(b) + "\n";
+        i+=increment;
     }
     return output;
 }
@@ -210,22 +216,14 @@ HsvMap getHueDistribution(Image& image) {
     {
         for (int x = 0; x < image.width; x++)
         {
-            // Print the images rbga values
-            //std::cout << image.data[y][x].toString() << "\t\t";
-
             // Normalize the rgb values
             float r = image.data[y][x].r;
             float g = image.data[y][x].g;
             float b = image.data[y][x].b;
 
-            //std::cout << image.data[y][x].toString() << "\t\t";
-
             HSV hsv = getHsvFromRgb(RGB { r, g, b });
 
-            //std::cout << r << ", " << g << ", " << b << "\t" << 
-            //std::get<0>(hsv) << ", " << std::get<1>(hsv) << ", " << std::get<2>(hsv) << std::endl;
-
-            // Check if the hsv value exists in the dictionary. If not, add it.
+            // Check if the hsv value exists in the dictionary. If not, add it. If it does, increment the counter
             if (hueDistribution.count(hsv)) {
                 hueDistribution[hsv]++;
             } else {
@@ -270,14 +268,24 @@ float getPercentRange(std::vector<HsvCount>& map, int fromPercent, int toPercent
     }
 }
 
-HsvCount getAverageHue(std::vector<HsvCount>& hueCount) {
+HsvCount getAverageHue(std::vector<HsvCount>& hsvCount) {
     float sum = 0.0f;
     int count = 0;
-    for(HsvCount hC : hueCount) {
+    for(HsvCount hC : hsvCount) {
         sum += std::get<0>(hC.first) * hC.second;
         count += hC.second;
     }
     return HsvCount { HSV { sum / count, 1, 1}, count };
+}
+
+float getAverageValue(std::vector<HsvCount>& hsvCount) {
+    float sum = 0.0f;
+    int count = 0;
+    for(HsvCount hC : hsvCount) {
+        sum += std::get<2>(hC.first) * hC.second;
+        count += hC.second;
+    }
+    return sum / count;
 }
 
 std::vector<HsvCount> getSortedHueCounts(HsvMap& map, int minValue, SORT_BY sorter) {
