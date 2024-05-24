@@ -1,22 +1,22 @@
 #include <bitset>
 #include "types.hpp"
 
-std::vector<HueCount> getHueCountArrayFromMap(HueMap& hueMap, int minValue) {
-    std::vector<HueCount> hueCount;
-    for (std::pair<float, int> map_i : hueMap) {
+std::vector<HsvCount> getHueCountArrayFromMap(HsvMap& hsvMap, int minValue) {
+    std::vector<HsvCount> hsvCount;
+    for (std::pair<HSV, int> map_i : hsvMap) {
         if (map_i.second > minValue) {
-            hueCount.push_back(HueCount { map_i.first, map_i.second });
+            hsvCount.push_back(HsvCount { map_i.first, map_i.second });
         }
     }
-    return hueCount;
+    return hsvCount;
 }
 
 /**
  * @brief 
  * 
- * @param hueCount 
+ * @param hsvCount 
  */
-void countingSortByCount(std::vector<HueCount>& hueCount) {
+void countingSortByCount(std::vector<HsvCount>& hueCount) {
     int min = INT_MAX;
     int max = INT_MIN;
 
@@ -43,7 +43,7 @@ void countingSortByCount(std::vector<HueCount>& hueCount) {
     }
 
     // Sort the array
-    std::vector<HueCount> output (hueCount.size());
+    std::vector<HsvCount> output (hueCount.size());
     for (int i = hueCount.size() - 1; i >= 0; i--) {
         output.at(countArray.at(hueCount.at(i).second - min) - 1) = hueCount.at(i);
         countArray.at(hueCount.at(i).second - min)--;
@@ -58,10 +58,10 @@ int convertFloatToBinary(float hue) {
     return (int)bits.to_ulong();
 }
 
-std::vector<HueCount> convertHueToBinary(std::vector<HueCount>& hueCount) {
-    std::vector<HueCount> binaryHueCount (hueCount.size());
+std::vector<HsvCount> convertHueToBinary(std::vector<HsvCount>& hueCount) {
+    std::vector<HsvCount> binaryHueCount (hueCount.size());
     for (int i = 0; i < hueCount.size(); i++) {
-        binaryHueCount.at(i) = HueCount { hueCount.at(i).first, convertFloatToBinary(hueCount.at(i).first) };
+        binaryHueCount.at(i) = HsvCount { hueCount.at(i).first, convertFloatToBinary(std::get<0>(hueCount.at(i).first)) };
     }
     return binaryHueCount;
 }
@@ -71,9 +71,9 @@ std::vector<HueCount> convertHueToBinary(std::vector<HueCount>& hueCount) {
  * 
  * @param hueCount 
  */
-std::vector<HueCount> countingSortByHue(HueMap& hueMap) {
-    std::vector<HueCount> hueCount = getHueCountArrayFromMap(hueMap, 0);
-    std::vector<HueCount> binaryHueCount = convertHueToBinary(hueCount);
+std::vector<HsvCount> countingSortByHue(HsvMap& hueMap) {
+    std::vector<HsvCount> hueCount = getHueCountArrayFromMap(hueMap, 0);
+    std::vector<HsvCount> binaryHueCount = convertHueToBinary(hueCount);
     countingSortByCount(binaryHueCount);
 
     for(int i = 0; i < hueCount.size(); i++) {

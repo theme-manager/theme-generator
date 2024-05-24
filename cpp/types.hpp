@@ -8,8 +8,12 @@ extern "C" {
     #include "stb_image.h"
 }
 
-typedef std::map<float, int> HueMap;
-typedef std::pair<float, int> HueCount;
+typedef std::tuple<float, float, float> HSV;
+//typedef std::map<float, int> HueMap;
+typedef std::map<HSV, int> HsvMap;
+//typedef std::pair<float, int> HueCount;
+typedef std::pair<HSV, int> HsvCount;
+typedef std::tuple<int, int, int> RGB;
 enum SORT_BY { HUE, COUNT };
 
 struct Pixel {

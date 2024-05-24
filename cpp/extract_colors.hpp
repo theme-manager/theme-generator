@@ -38,10 +38,11 @@ std::string getUnixNoColor() {
  * @param value the value
  * @return std::tuple<int, int, int> 
  */
-std::tuple<int, int, int> getRgbFromHue(float hue, float value = 1) {
+RGB getRgbFromHsv(HSV hsv) {
     // https://en.wikipedia.org/wiki/Hue#HSL_and_HSV
-    float s = 1;
-    float v = value;
+    float hue = std::get<0>(hsv);
+    float s = std::get<1>(hsv);
+    float v = std::get<2>(hsv);
     float r, g, b;
     
     float c = s * v;
@@ -76,39 +77,50 @@ std::tuple<int, int, int> getRgbFromHue(float hue, float value = 1) {
     g = (g + m) * c;
     b = (b + m) * c;
 
-    //if (hue < 0) {
-    //    hue += 360;
-    //}
-    //if (hue > 360) {
-    //    hue -= 360;
-    //}
-    //if (hue < 60) {
-    //    r = 1;
-    //    g = hue / 60;
-    //    b = 0;
-    //} else if (hue < 120) {
-    //    r = 1 - (hue - 60) / 60;
-    //    g = 1;
-    //    b = 0;
-    //} else if (hue < 180) {
-    //    r = 0;
-    //    g = 1;
-    //    b = (hue - 120) / 60;
-    //} else if (hue < 240) {
-    //    r = 0;
-    //    g = 1 - (hue - 180) / 60;
-    //    b = 1;
-    //} else if (hue < 300) {
-    //    r = (hue - 240) / 60;
-    //    g = 0;
-    //    b = 1;
-    //} else {
-    //    r = 1;
-    //    g = 0;
-    //    b = 1 - (hue - 300) / 60;
-    //}
+    return RGB { r * 255, g * 255, b * 255 };
+}
 
-    return std::make_tuple(r * 255, g * 255, b * 255);
+HSV getHsvFromRgb(RGB rgb) {
+    float r = std::get<0>(rgb) / 255.0f;
+    float g = std::get<1>(rgb) / 255.0f;
+    float b = std::get<2>(rgb) / 255.0f;
+
+    float max = std::max(r, std::max(g, b));
+    float min = std::min(r, std::min(g, b));
+    float delta = max - min;
+
+    float h = 0.0f;
+    float s = 0.0f;
+    float v = max;
+
+    if (delta < 0.00001f) {
+        h = 0.0f;
+        s = 0.0f;
+        return HSV { h, s, v };
+    }
+
+    if (max > 0.0f) {
+        s = delta / max;
+    } else {
+        s = 0.0f;
+        h = 0.0f;
+        return HSV { h, s, v };
+    } 
+
+    if (r >= max) {
+        h = (g - b) / delta;
+    } else if (g >= max) {
+        h = 2.0f + (b - r) / delta;
+    } else {
+        h = 4.0f + (r - g) / delta;
+    }
+
+    h *= 60.0f;
+    if (h < 0.0f) {
+        h += 360.0f;
+    }
+
+    return HSV { h, s, v };
 }
 
 std::string getColorBar(float hue, int length) {
@@ -116,7 +128,7 @@ std::string getColorBar(float hue, int length) {
     int increment = 100 / length;
     std::string output = "";
     for(int i = 0; i < 100; i+=increment) {
-        std::tuple rgb = getRgbFromHue(hue, i / 100.0f);
+        std::tuple rgb = getRgbFromHsv(HSV { hue, 1.0f, (float)i / 100.0f });
         int r = std::get<0>(rgb);
         int g = std::get<1>(rgb);
         int b = std::get<2>(rgb);
@@ -192,8 +204,8 @@ Image loadImage(const std::string& path) {
     return image;
 }
 
-HueMap getHueDistribution(Image& image) {
-    HueMap hueDistribution;
+HsvMap getHueDistribution(Image& image) {
+    HsvMap hueDistribution;
 
     for (int y = 0; y < image.height; y++)
     {
@@ -203,40 +215,22 @@ HueMap getHueDistribution(Image& image) {
             //std::cout << image.data[y][x].toString() << "\t\t";
 
             // Normalize the rgb values
-            float r = image.data[y][x].r / 255.0f;
-            float g = image.data[y][x].g / 255.0f;
-            float b = image.data[y][x].b / 255.0f;
+            float r = image.data[y][x].r;
+            float g = image.data[y][x].g;
+            float b = image.data[y][x].b;
 
-            // Calculate the hue
-            float max = std::max(r, std::max(g, b));
-            float min = std::min(r, std::min(g, b));
-            float hue;
-            if (max - min < 0.00001f)
-            {
-                hue = 0.0f;
-            }
-            else if (max == r)
-            {
-                hue = (g - b) / (max - min);
-            }
-            else if (max == g)
-            {
-                hue = 2.0f + (b - r) / (max - min);
-            }
-            else
-            {
-                hue = 4.0f + (r - g) / (max - min);
-            }
-            hue *= 60.0f;
-            if (hue < 0.0f)
-            {
-                hue += 360.0f;
-            }
+            //std::cout << image.data[y][x].toString() << "\t\t";
 
-            if (hueDistribution.count(hue)) {
-                hueDistribution[hue]++;
+            HSV hsv = getHsvFromRgb(RGB { r, g, b });
+
+            //std::cout << r << ", " << g << ", " << b << "\t" << 
+            //std::get<0>(hsv) << ", " << std::get<1>(hsv) << ", " << std::get<2>(hsv) << std::endl;
+
+            // Check if the hsv value exists in the dictionary. If not, add it.
+            if (hueDistribution.count(hsv)) {
+                hueDistribution[hsv]++;
             } else {
-                hueDistribution[hue] = 1;
+                hueDistribution[hsv] = 1;
             }
         }
     }
@@ -244,7 +238,7 @@ HueMap getHueDistribution(Image& image) {
     return hueDistribution;
 }
 
-float getPercentRange(std::vector<HueCount>& map, int fromPercent, int toPercent, SORT_BY sorter) {
+float getPercentRange(std::vector<HsvCount>& map, int fromPercent, int toPercent, SORT_BY sorter) {
     if(fromPercent > 100 || toPercent > 100 || fromPercent < 0 || toPercent < 0 || fromPercent > toPercent) {
         return 0.0f;
     }
@@ -259,7 +253,7 @@ float getPercentRange(std::vector<HueCount>& map, int fromPercent, int toPercent
     for(int i = min; i <= max; i++) {
         switch (sorter) {
             case SORT_BY::HUE:
-                sum += map[i].first * map[i].second;
+                sum += std::get<0>(map[i].first) * map[i].second;
                 countSum += map[i].second;
                 break;
             case SORT_BY::COUNT:
@@ -277,18 +271,18 @@ float getPercentRange(std::vector<HueCount>& map, int fromPercent, int toPercent
     }
 }
 
-float getAverageHue(std::vector<HueCount>& hueCount) {
+float getAverageHue(std::vector<HsvCount>& hueCount) {
     float sum = 0.0f;
     int count = 0;
-    for(HueCount hC : hueCount) {
-        sum += hC.first * hC.second;
+    for(HsvCount hC : hueCount) {
+        sum += std::get<0>(hC.first) * hC.second;
         count += hC.second;
     }
     return sum / count;
 }
 
-std::vector<HueCount> getSortedHueCounts(HueMap& map, int minValue, SORT_BY sorter) {
-    std::vector<HueCount> hueCount;
+std::vector<HsvCount> getSortedHueCounts(HsvMap& map, int minValue, SORT_BY sorter) {
+    std::vector<HsvCount> hueCount;
 
     // sort the array
     if(sorter == SORT_BY::COUNT) {
@@ -307,9 +301,9 @@ std::vector<HueCount> getSortedHueCounts(HueMap& map, int minValue, SORT_BY sort
  * 
  * @param map the hue map which will be printed
  */
-void printHueDistribution(HueMap& map) {
+void printHueDistribution(HsvMap& map) {
     for (auto it = map.begin(); it != map.end(); it++) {
-        std::cout << "Hue: " << it->first << "°, \t\tCount: " << it->second << "\t\tColor: " << std::endl;
+        std::cout << "Hue: " << std::get<0>(it->first) << "°, \t\tCount: " << it->second << "\t\tColor: " << std::endl;
     }
 }
 
@@ -319,15 +313,15 @@ void printHueDistribution(HueMap& map) {
  * @param hueCount the hue count array which will be printed
  * @param barWidth the width of the color bar which will be printed to the right
  */
-void printSortedHueCounts(std::vector<HueCount>& hueCount, int barWidth) {
-    for (int i = 0; i < hueCount.size(); i++) {
-        std::tuple<int, int, int> rgb = getRgbFromHue(hueCount.at(i).first);
+void printSortedHueCounts(std::vector<HsvCount>& hsvCount, int barWidth) {
+    for (int i = 0; i < hsvCount.size(); i++) {
+        std::tuple<int, int, int> rgb = getRgbFromHsv(hsvCount.at(i).first);
         int r = std::get<0>(rgb);
         int g = std::get<1>(rgb);
         int b = std::get<2>(rgb);
         bool twoOver100 = (r >= 100 && g >= 100) || (r >= 100 && b >= 100) || (g >= 100 && b >= 100);
-        std::cout << "Hue: " << hueCount.at(i).first << "°, \t\tCount: " << hueCount.at(i).second << 
+        std::cout << "Hue: " << std::get<0>(hsvCount.at(i).first) << "°, \t\tCount: " << hsvCount.at(i).second << 
         "\trgb(" + std::to_string(r) + ", " + std::to_string(g) + ", " + std::to_string(b) << ")" << (twoOver100 ? "\t" : "\t\t") <<
-        "Color: " << getColorBar(hueCount.at(i).first, barWidth) << getUnixNoColor() << std::endl;
+        "Color: " << getColorBar(std::get<0>(hsvCount.at(i).first), barWidth) << getUnixNoColor() << std::endl;
     }
 }

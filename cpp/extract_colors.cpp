@@ -10,17 +10,17 @@
  * @param sortedBy 
  * @param barWidth 
  */
-void printHueCountWithIncrement(std::vector<HueCount>& hueCount, int increment, std::string sortedBy, int barWidth) {
+void printHueCountWithIncrement(std::vector<HsvCount>& hsvCount, int increment, std::string sortedBy, int barWidth) {
     std::cout << "\nHues percentages in " << increment << "\% increments sorted by their " << sortedBy << ":" << std::endl;
     for(int i = 0; i < 100/increment; i++) {
-        float averageHue = getPercentRange(hueCount,  i * increment, i * increment + increment, SORT_BY::HUE);
-        std::tuple<int, int, int> rgb = getRgbFromHue(averageHue);
+        float averageHue = getPercentRange(hsvCount,  i * increment, i * increment + increment, SORT_BY::HUE);
+        std::tuple<int, int, int> rgb = getRgbFromHsv(HSV { averageHue, 1, 1 });
         int r = std::get<0>(rgb);
         int g = std::get<1>(rgb);
         int b = std::get<2>(rgb);
         std::cout << "Hue from " << i * increment << "\% to " << i * increment + increment << "\%: " << 
             "\taverage Hues: " << averageHue << "° " <<
-            "\tsum of Count: " << getPercentRange(hueCount,  i * increment, i * increment + increment, SORT_BY::COUNT) << 
+            "\tsum of Count: " << getPercentRange(hsvCount,  i * increment, i * increment + increment, SORT_BY::COUNT) << 
             "\trgb(" << std::to_string(r) << ", " << std::to_string(g) << ", " << std::to_string(b) << ")" <<
             "\tColor: " << getColorBar(averageHue, barWidth) << getUnixNoColor() << std::endl;
     }
@@ -55,12 +55,12 @@ int main(int argc, char* argv[])
     }
 
     // Get the hue distribution
-    HueMap hueDistribution = getHueDistribution(image);
+    HsvMap hueDistribution = getHueDistribution(image);
     //printHueDistribution(hueDistribution);
 
     // Sort the hue distribution by how often a specific hue occurs
-    std::vector<HueCount> sortedCounts = getSortedHueCounts(hueDistribution, 0, SORT_BY::COUNT);
-    std::vector<HueCount> sortedHues = getSortedHueCounts(hueDistribution, 0, SORT_BY::HUE);
+    std::vector<HsvCount> sortedCounts = getSortedHueCounts(hueDistribution, 0, SORT_BY::COUNT);
+    std::vector<HsvCount> sortedHues = getSortedHueCounts(hueDistribution, 0, SORT_BY::HUE);
 
 
     std::cout << "Hue Count: " << sortedCounts.size() << std::endl;
@@ -78,7 +78,7 @@ int main(int argc, char* argv[])
 
     std::cout << std::endl;
 
-    printSortedHueCounts(sortedHues, 50);
+    //printSortedHueCounts(sortedHues, 50);
 
     //std::cout << "Hue 120° 10 Steps: " << getColorBar(77, 10) << getUnixNoColor() << std::endl;
 
