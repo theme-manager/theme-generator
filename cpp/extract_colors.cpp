@@ -1,8 +1,8 @@
 #include <iostream>
 #include <iomanip>
 #include <string>
+
 #include "extract_colors.hpp"
-#include "utils.hpp"
 
 /**
  * @brief 
