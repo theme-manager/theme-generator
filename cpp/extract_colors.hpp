@@ -31,67 +31,39 @@ std::string getUnixNoColor() {
     return "\e[0m";
 }
 
+/**
+ * @brief Get the rgb values from a given Hue value
+ * 
+ * @param hue the hue
+ * @param value the value
+ * @return std::tuple<int, int, int> 
+ */
 std::tuple<int, int, int> getRgbFromHue(float hue, float value = 1) {
     // https://en.wikipedia.org/wiki/Hue#HSL_and_HSV
-    //float s = 1;
-    //float v = value;
+    float s = 1;
+    float v = value;
     float r, g, b;
     
-    //float c = s * v;
-    //float x = c * (1 - std::abs(std::fmod(hue / 60.0f, 2) - 1));
-    //float m = v - c;
-    //if(hue < 60) {
-    //    r = c;
-    //    g = x;
-    //    b = 0;
-    //} else if(hue < 120) {
-    //    r = x;
-    //    g = c;
-    //    b = 0;
-    //} else if(hue < 180) {
-    //    r = 0;
-    //    g = c;
-    //    b = x;
-    //} else if(hue < 240) {
-    //    r = 0;
-    //    g = x;
-    //    b = c;
-    //} else if(hue < 300) {
-    //    r = x;
-    //    g = 0;
-    //    b = c;
-    //} else {
-    //    r = c;
-    //    g = 0;
-    //    b = x;
-    //}
-    //r = (r + m);
-    //g = (g + m);
-    //b = (b + m);
-
-    if (hue < 0) {
-        hue = 0;
-    }
-    if (hue > 360) {
-        hue = 360;
-    }
-    if (hue < 60) {
+    float c = s * v;
+    float x = c * (1 - std::abs(std::fmod(hue / 60.0f, 2) - 1));
+    float m = v - c;
+    if(hue < 60) {
         r = 1;
         g = hue / 60;
         b = 0;
-    } else if (hue < 120) {
+    } else if(hue < 120) {
         r = 1 - (hue - 60) / 60;
         g = 1;
         b = 0;
-    } else if (hue < 180) {
+    } else if(hue < 180) {
         r = 0;
         g = 1;
         b = (hue - 120) / 60;
-    } else if (hue < 240) {
+    } else if(hue < 240) {
         r = 0;
         g = 1 - (hue - 180) / 60;
         b = 1;
-    } else if (hue < 300) {
+    } else if(hue < 300) {
         r = (hue - 240) / 60;
         g = 0;
         b = 1;
@@ -100,6 +72,41 @@ std::tuple<int, int, int> getRgbFromHue(float hue, float value = 1) {
         g = 0;
         b = 1 - (hue - 300) / 60;
     }
+    r = (r + m) * c;
+    g = (g + m) * c;
+    b = (b + m) * c;
+
+    //if (hue < 0) {
+    //    hue += 360;
+    //}
+    //if (hue > 360) {
+    //    hue -= 360;
+    //}
+    //if (hue < 60) {
+    //    r = 1;
+    //    g = hue / 60;
+    //    b = 0;
+    //} else if (hue < 120) {
+    //    r = 1 - (hue - 60) / 60;
+    //    g = 1;
+    //    b = 0;
+    //} else if (hue < 180) {
+    //    r = 0;
+    //    g = 1;
+    //    b = (hue - 120) / 60;
+    //} else if (hue < 240) {
+    //    r = 0;
+    //    g = 1 - (hue - 180) / 60;
+    //    b = 1;
+    //} else if (hue < 300) {
+    //    r = (hue - 240) / 60;
+    //    g = 0;
+    //    b = 1;
+    //} else {
+    //    r = 1;
+    //    g = 0;
+    //    b = 1 - (hue - 300) / 60;
+    //}
 
     return std::make_tuple(r * 255, g * 255, b * 255);
 }
@@ -109,11 +116,12 @@ std::string getColorBar(float hue, int length) {
     int increment = 100 / length;
     std::string output = "";
     for(int i = 0; i < 100; i+=increment) {
-        std::tuple rgb = getRgbFromHue(hue, i / length);
+        std::tuple rgb = getRgbFromHue(hue, i / 100.0f);
         int r = std::get<0>(rgb);
         int g = std::get<1>(rgb);
         int b = std::get<2>(rgb);
         output += getUnixColorCode(r, g, b) + "#";
+        //output += getUnixColorCode(r, g, b) + " " + std::to_string(r) + ", " + std::to_string(g) + ", " + std::to_string(b) + "\n";
     }
     return output;
 }
@@ -309,8 +317,9 @@ void printHueDistribution(HueMap& map) {
  * @brief Prints the whole hue count array given as is. If it is sorted, it will be printed in its sorted state as well
  * 
  * @param hueCount the hue count array which will be printed
+ * @param barWidth the width of the color bar which will be printed to the right
  */
-void printSortedHueCounts(std::vector<HueCount>& hueCount) {
+void printSortedHueCounts(std::vector<HueCount>& hueCount, int barWidth) {
     for (int i = 0; i < hueCount.size(); i++) {
         std::tuple<int, int, int> rgb = getRgbFromHue(hueCount.at(i).first);
         int r = std::get<0>(rgb);
@@ -319,6 +328,6 @@ void printSortedHueCounts(std::vector<HueCount>& hueCount) {
         bool twoOver100 = (r >= 100 && g >= 100) || (r >= 100 && b >= 100) || (g >= 100 && b >= 100);
         std::cout << "Hue: " << hueCount.at(i).first << "°, \t\tCount: " << hueCount.at(i).second << 
         "\trgb(" + std::to_string(r) + ", " + std::to_string(g) + ", " + std::to_string(b) << ")" << (twoOver100 ? "\t" : "\t\t") <<
-        "Color: " << getColorBar(hueCount.at(i).first, 20) << getUnixNoColor() << std::endl;
+        "Color: " << getColorBar(hueCount.at(i).first, barWidth) << getUnixNoColor() << std::endl;
     }
 }

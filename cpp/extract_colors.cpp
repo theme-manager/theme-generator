@@ -2,7 +2,15 @@
 #include <string>
 #include "extract_colors.hpp"
 
-void printHueCountWithIncrement(std::vector<HueCount>& hueCount, int increment, std::string sortedBy) {
+/**
+ * @brief 
+ * 
+ * @param hueCount 
+ * @param increment 
+ * @param sortedBy 
+ * @param barWidth 
+ */
+void printHueCountWithIncrement(std::vector<HueCount>& hueCount, int increment, std::string sortedBy, int barWidth) {
     std::cout << "\nHues percentages in " << increment << "\% increments sorted by their " << sortedBy << ":" << std::endl;
     for(int i = 0; i < 100/increment; i++) {
         float averageHue = getPercentRange(hueCount,  i * increment, i * increment + increment, SORT_BY::HUE);
@@ -14,7 +22,7 @@ void printHueCountWithIncrement(std::vector<HueCount>& hueCount, int increment, 
             "\taverage Hues: " << averageHue << "° " <<
             "\tsum of Count: " << getPercentRange(hueCount,  i * increment, i * increment + increment, SORT_BY::COUNT) << 
             "\trgb(" << std::to_string(r) << ", " << std::to_string(g) << ", " << std::to_string(b) << ")" <<
-            "\tColor: " << getColorBar(averageHue, 20) << getUnixNoColor() << std::endl;
+            "\tColor: " << getColorBar(averageHue, barWidth) << getUnixNoColor() << std::endl;
     }
 }
 
@@ -65,12 +73,14 @@ int main(int argc, char* argv[])
     if(input > 0 && input <= 100) increment = input;
 
     // Print the sorted vectors sorted by counts and hues
-    printHueCountWithIncrement(sortedCounts, increment, "Counts");
-    printHueCountWithIncrement(sortedHues, increment, "Hues");
+    printHueCountWithIncrement(sortedCounts, increment, "Counts", 35);
+    printHueCountWithIncrement(sortedHues, increment, "Hues", 35);
 
     std::cout << std::endl;
 
-    printSortedHueCounts(sortedHues);
+    printSortedHueCounts(sortedHues, 50);
+
+    //std::cout << "Hue 120° 10 Steps: " << getColorBar(77, 10) << getUnixNoColor() << std::endl;
 
     return 0;
 }
