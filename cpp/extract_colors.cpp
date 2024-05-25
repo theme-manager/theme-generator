@@ -5,30 +5,37 @@
 #include "extract_colors.hpp"
 
 /**
- * @brief 
- * 
- * @param hueCount 
- * @param increment 
- * @param sortedBy 
- * @param barWidth 
+ * @brief Prints the HsvCount array with a given percent increment. Averages result based on the increment range. 
+ * @param[in] hsvCount the HsvCount array which will be printed
+ * @param[in] increment the percent range of each print
+ * @param[in] sortedBy the name of the sorted parameter. Should be "Gue" or "Count"
+ * @param[in] barWidth the maximum width of the colored bar
  */
-void printHueCountWithIncrement(std::vector<HsvCount>& hsvCount, int increment, std::string sortedBy, int barWidth) {
+void printHueCountWithIncrement(const std::vector<HsvCount>& hsvCount, const int increment, const std::string sortedBy, const int barWidth) {
     std::cout << "\nHues percentages in " << increment << "\% increments sorted by their " << sortedBy << ":" << std::endl;
     for(int i = 0; i < 100/increment; i++) {
         float averageHue = getPercentRange(hsvCount,  i * increment, i * increment + increment, SORT_BY::HUE);
-        std::tuple<int, int, int> rgb = getRgbFromHsv(HSV { averageHue, 1, 1 });
+        RGB rgb = getRgbFromHsv(HSV { averageHue, 1, 1 });
         int r = std::get<0>(rgb);
         int g = std::get<1>(rgb);
         int b = std::get<2>(rgb);
         std::cout << "Hue from " << i * increment << "\% to " << i * increment + increment << "\%: " << 
             "\taverage Hues: " << averageHue << "° " <<
-            "\tsum of Count: " << getPercentRange(hsvCount,  i * increment, i * increment + increment, SORT_BY::COUNT) << 
+            "\tsum of Count: " << (int)getPercentRange(hsvCount,  i * increment, i * increment + increment, SORT_BY::COUNT) << 
             "\trgb(" << std::to_string(r) << ", " << std::to_string(g) << ", " << std::to_string(b) << ")" <<
             "\tColor: " << getColorBar(averageHue, barWidth) << getUnixNoColor() << std::endl;
     }
 }
 
-void printHueCountGroups(std::vector<HsvCount>& hsvCount, int groupSize, int barWidth) {
+/**
+ * @brief Prints the given HsvCount array in groups of a given size and displays the count of each group in a colored bar, 
+ * which can be maximal as long as the barWidth.
+ * 
+ * @param[in] hsvCount The array which gets grouped and displayed
+ * @param[in] groupSize The size of the group in percent
+ * @param[in] barWidth The maximum width of the bar
+ */
+void printHueCountGroups(const std::vector<HsvCount>& hsvCount, int groupSize, const int barWidth) {
     if(groupSize <= 0) {
         std::cout << "Group size must be greater than 0" << std::endl;
         return;
@@ -77,11 +84,12 @@ void printHueCountGroups(std::vector<HsvCount>& hsvCount, int groupSize, int bar
 }
 
 /**
- * @brief 
+ * @brief Loads an image and extracts all colors from it and does som math and simple algorithmics to determine 
+ * the images colors.
  * 
- * @param argc 
- * @param argv 
- * @return int 
+ * @param[in] argc the count of the arguments
+ * @param[in] argv the arguments values
+ * @return int the exit code of the program
  */
 int main(int argc, char* argv[])
 {
@@ -116,8 +124,8 @@ int main(int argc, char* argv[])
     //printHueDistribution(hueDistribution);
 
     // Sort the hue distribution by how often a specific hue occurs
-    std::vector<HsvCount> sortedCounts = getSortedHueCounts(hueDistribution, 20, SORT_BY::COUNT);
-    std::vector<HsvCount> sortedHues = getSortedHueCounts(hueDistribution, 20, SORT_BY::HUE);
+    std::vector<HsvCount> sortedCounts = getSortedHueCounts(hueDistribution, SORT_BY::COUNT, 20);
+    std::vector<HsvCount> sortedHues = getSortedHueCounts(hueDistribution, SORT_BY::HUE);
 
     std::cout << "Hue Count: " << sortedCounts.size() << std::endl;
     std::cout << "Average hue normalized by the colors count: " << std::get<0>(getAverageHue(sortedCounts).first) << "°" << std::endl;
@@ -138,8 +146,6 @@ int main(int argc, char* argv[])
 
     printHueCountGroups(sortedHues, groupSize, barWidth);
     //printSortedHueCounts(sortedHues, 50);
-
-    //std::cout << "Hue 120° 10 Steps: " << getColorBar(77, 10) << getUnixNoColor() << std::endl;
 
     return 0;
 }

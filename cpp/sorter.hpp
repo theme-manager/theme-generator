@@ -1,9 +1,16 @@
 #include <bitset>
 #include "types.hpp"
 
-std::vector<HsvCount> getHueCountArrayFromMap(HsvMap& hsvMap, int minValue) {
+/**
+ * @brief Goes through all HsvCount ojects inside the hsvMap and returns only the ones whose count is greater than the minValue
+ * 
+ * @param[in] hsvMap the origin array of HsvCounts
+ * @param[in] minValue the minimum count needed for a HsvCount to be returned
+ * @return std::vector<HsvCount> the filtered array
+ */
+std::vector<HsvCount> getHueCountArrayFromMap(const HsvMap& hsvMap, const int minValue) {
     std::vector<HsvCount> hsvCount;
-    for (std::pair<HSV, int> map_i : hsvMap) {
+    for (HsvCount map_i : hsvMap) {
         if (map_i.second > minValue) {
             hsvCount.push_back(HsvCount { map_i.first, map_i.second });
         }
@@ -12,9 +19,9 @@ std::vector<HsvCount> getHueCountArrayFromMap(HsvMap& hsvMap, int minValue) {
 }
 
 /**
- * @brief 
+ * @brief Goes through the complete Array of HsvCounts and sorts it based on the second value of the HsvCount, the count.
  * 
- * @param hsvCount 
+ * @param[out] hsvCount the array which gets sorted. Passed by reference.
  */
 void countingSortByCount(std::vector<HsvCount>& hueCount) {
     int min = INT_MAX;
@@ -52,13 +59,26 @@ void countingSortByCount(std::vector<HsvCount>& hueCount) {
     hueCount = output;
 }
 
-int convertFloatToBinary(float hue) {
+/**
+ * @brief Converts a given floating point number to an integer which is the binary representation of this float. This is done to improve
+ * the performance of the counting sort (and make it possible in the first place, because counting sort can only handle integers)
+ * 
+ * @param[in] hue the floating point number which will be converted
+ * @return int the converted number
+ */
+int convertFloatToBinary(const float hue) {
     int output;
     std::bitset<sizeof(float) * CHAR_BIT> bits(output);
     return (int)bits.to_ulong();
 }
 
-std::vector<HsvCount> convertHueToBinary(std::vector<HsvCount>& hueCount) {
+/**
+ * @brief Goes trough an array of HsvCount objects and converts the hue value to an binary integer and saves it in the HsvCount objects
+ * 
+ * @param[in] hueCount (readonly) the array of HsvCount objects
+ * @return std::vector<HsvCount> the array of HsvCount objects with the hue value converted
+ */
+std::vector<HsvCount> convertHueToBinary(const std::vector<HsvCount>& hueCount) {
     std::vector<HsvCount> binaryHueCount (hueCount.size());
     for (int i = 0; i < hueCount.size(); i++) {
         binaryHueCount.at(i) = HsvCount { hueCount.at(i).first, convertFloatToBinary(std::get<0>(hueCount.at(i).first)) };
@@ -67,9 +87,10 @@ std::vector<HsvCount> convertHueToBinary(std::vector<HsvCount>& hueCount) {
 }
 
 /**
- * @brief 
+ * @brief converts the hues to integers and sorts the array based on this integer. 
  * 
- * @param hueCount 
+ * @param[in] hueCount (readonly) the array which gets sorted
+ * @return std::vector<HsvCount> the sorted array
  */
 std::vector<HsvCount> countingSortByHue(HsvMap& hueMap) {
     std::vector<HsvCount> hueCount = getHueCountArrayFromMap(hueMap, 0);

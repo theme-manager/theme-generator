@@ -5,23 +5,36 @@
 
 #include "sorter.hpp"
 
-
-std::string getUnixColorCode(int r, int g, int b) {
-    return "\e[38;2;" + std::to_string(r) + ";" + std::to_string(g) + ";" + std::to_string(b) + "m";
+/**
+ * @brief Get the unix color code from given rgb values. The returned string can be used to change the text 
+ * color of the text inside the terminal which comes after the code
+ * 
+ * @param[in] rgb the RGB tripel containing the rgb values (0-255)
+ * @return std::string the color code which can be used in a string stream to color all text after it
+ */
+std::string getUnixColorCode(const RGB& rgb) {
+    return "\e[38;2;" + std::to_string(std::get<0>(rgb)) + ";" + 
+        std::to_string(std::get<1>(rgb)) + ";" + 
+        std::to_string(std::get<2>(rgb)) + "m";
 }
 
+/**
+ * @brief Get the color code for no color (this means the default terminal color). Used to reset the text color 
+ * after a colored section
+ * 
+ * @return std::string the color code for the default terminal color
+ */
 std::string getUnixNoColor() {
     return "\e[0m";
 }
 
 /**
- * @brief Get the rgb values from a given Hue value
+ * @brief Get the rgb values from a given HSV object
  * 
- * @param hue the hue
- * @param value the value
- * @return std::tuple<int, int, int> 
+ * @param[in] hsv the hue, saturation and value inside a tripel of floats
+ * @return RGB the rgb object containing the colors
  */
-RGB getRgbFromHsv(HSV hsv) {
+RGB getRgbFromHsv(const HSV& hsv) {
     // https://en.wikipedia.org/wiki/Hue#HSL_and_HSV
     float hue = std::get<0>(hsv);
     float s = std::get<1>(hsv);
@@ -63,7 +76,14 @@ RGB getRgbFromHsv(HSV hsv) {
     return RGB { r * 255, g * 255, b * 255 };
 }
 
-HSV getHsvFromRgb(RGB rgb) {
+/**
+ * @brief Get the HSV values from a given RGB object. The RGB object is an tripel of integers, the HSV 
+ * is a tripel of floats.
+ * 
+ * @param[in] rgb the red, green and blue values inside a tripel of integers
+ * @return HSV the hue, saturation and value inside a tripel of floats
+ */
+HSV getHsvFromRgb(const RGB& rgb) {
     float r = std::get<0>(rgb) / 255.0f;
     float g = std::get<1>(rgb) / 255.0f;
     float b = std::get<2>(rgb) / 255.0f;
@@ -105,61 +125,81 @@ HSV getHsvFromRgb(RGB rgb) {
     return HSV { h, s, v };
 }
 
-std::string getColorBar(float hue, int length, float hueValue = 1.0f) {
-    //std::cout << "\t[hue:" << hue << "][length:" << length << "]\t";
+/**
+ * @brief Creates a color bar in the color of the given hue and value. The length of the color bar is determined by its length attribute.
+ * 
+ * @param[in] hue the HSV hue of the color bar
+ * @param[in] length the length of the bar
+ * @param[in] value the HSV value of the color bar
+ * @return std::string the created color bar
+ */
+std::string getColorBar(const float hue, int length, const float value = 1.0f) {
     if(length <= 0) {
         length = 1;
     }
 
-    int r, g, b;
-    float increment = 100 / (float)length;
-    std::string output = "";
-    float i = 0;
-    while(i < 100) {
-        std::tuple rgb = getRgbFromHsv(HSV { hue, hueValue, 1.0f });
-        int r = std::get<0>(rgb);
-        int g = std::get<1>(rgb);
-        int b = std::get<2>(rgb);
-        output += getUnixColorCode(r, g, b) + "#";
-        i+=increment;
+    RGB rgb = getRgbFromHsv(HSV { hue, value, 1.0f });
+    std::string output = getUnixColorCode(rgb);
+    for(int i = 0; i < length; i++) {
+        output += "#";
     }
     return output;
 }
 
-std::vector<HsvCount> getSortedHueCounts(HsvMap& map, int minValue, SORT_BY sorter) {
+/**
+ * @brief Sorts the given HsvMap based on SORT_BY and puts the results in a new array of HsvCounts. Only 
+ * respects values which counts are greater or equal to the minValue when SORT_BY::COUNT is used.
+ * 
+ * @param[in] map (readonly) The dictionary of all HSV values and their counts, unsorted and chaotic
+ * @param[in] sorter determines the variable after which the array will get sorted
+ * @param[in] minValue the minimum count for included HsvCounts (only used when SORT_BY::COUNT is used, otherwise ignored)
+ * @return std::vector<HsvCount> the sorted array
+ */
+std::vector<HsvCount> getSortedHueCounts(HsvMap& map, const SORT_BY sorter, const int minValue = 0) {
     std::vector<HsvCount> hueCount;
-
-    // sort the array
-    if(sorter == SORT_BY::COUNT) {
-        hueCount = getHueCountArrayFromMap(map, minValue);
-        countingSortByCount(hueCount);
-    } else if(sorter == SORT_BY::HUE) {
-        hueCount = countingSortByHue(map);
+    switch(sorter) {
+        case HUE:
+            hueCount = countingSortByHue(map);
+            break;
+        case COUNT:
+            hueCount = getHueCountArrayFromMap(map, minValue);
+            countingSortByCount(hueCount);
+            break;
     }
-    
     return hueCount;
 }
 
-float getPercentRange(std::vector<HsvCount>& map, int fromPercent, int toPercent, SORT_BY sorter) {
+/**
+ * @brief Takes a HsvCount array and extracts all HsvCounts within a range of percent representing the 
+ * percent of the indexed array. Depending on the SORT_BY, the value is either the average hue of all the 
+ * extracted HsvCounts or the sum of all counts.
+ * 
+ * @param[in] hsvCounts The array which gets examined
+ * @param[in] fromPercent the percentage from which the range starts
+ * @param[in] toPercent the percentage at which the range ends
+ * @param[in] sorter determines which variable will be returned
+ * @return float either the average hue or the sum of counts, depending on the @ sorter
+ */
+float getPercentRange(const std::vector<HsvCount>& hsvCounts, const int fromPercent, const int toPercent, const SORT_BY sorter) {
     if(fromPercent > 100 || toPercent > 100 || fromPercent < 0 || toPercent < 0 || fromPercent > toPercent) {
         return 0.0f;
     }
 
     float sum = 0.0f;
     int rangePercent = toPercent - fromPercent;
-    int range = (map.size() * rangePercent) / 100;
-    int min = (map.size() * fromPercent) / 100;
-    int max = (map.size() * toPercent) / 100;
+    int range = (hsvCounts.size() * rangePercent) / 100;
+    int min = (hsvCounts.size() * fromPercent) / 100;
+    int max = (hsvCounts.size() * toPercent) / 100;
     int countSum = 0;
 
     for(int i = min; i <= max; i++) {
         switch (sorter) {
             case SORT_BY::HUE:
-                sum += std::get<0>(map[i].first) * map[i].second;
-                countSum += map[i].second;
+                sum += std::get<0>(hsvCounts[i].first) * hsvCounts[i].second;
+                countSum += hsvCounts[i].second;
                 break;
             case SORT_BY::COUNT:
-                sum += map[i].second;
+                sum += hsvCounts[i].second;
                 break;
         }
     }
@@ -173,20 +213,33 @@ float getPercentRange(std::vector<HsvCount>& map, int fromPercent, int toPercent
     }
 }
 
-HsvCount getAverageHue(std::vector<HsvCount>& hsvCount) {
+/**
+ * @brief Goes through all HsvCounts in the given array and returns the average hue from all HsvCounts.
+ * Also saves the sum of counts in the returned HsvCount
+ * 
+ * @param[in] hsvCounts (readonly) the array which will get examined
+ * @return HsvCount 
+ */
+HsvCount getAverageHue(const std::vector<HsvCount>& hsvCounts) {
     float sum = 0.0f;
     int count = 0;
-    for(HsvCount hC : hsvCount) {
+    for(HsvCount hC : hsvCounts) {
         sum += std::get<0>(hC.first) * hC.second;
         count += hC.second;
     }
     return HsvCount { HSV { sum / count, 1, 1}, count };
 }
 
-float getAverageValue(std::vector<HsvCount>& hsvCount) {
+/**
+ * @brief Goes trhough all HsvCounts in the give array and returns the average value from all HsvCounts.
+ * 
+ * @param[in] hsvCounts (readonly) the array which will get examined
+ * @return float the average value among all HsvCounts
+ */
+float getAverageValue(const std::vector<HsvCount>& hsvCounts) {
     float sum = 0.0f;
     int count = 0;
-    for(HsvCount hC : hsvCount) {
+    for(HsvCount hC : hsvCounts) {
         sum += std::get<2>(hC.first) * hC.second;
         count += hC.second;
     }

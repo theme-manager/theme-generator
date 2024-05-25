@@ -9,9 +9,7 @@ extern "C" {
 }
 
 typedef std::tuple<float, float, float> HSV;
-//typedef std::map<float, int> HueMap;
 typedef std::map<HSV, int> HsvMap;
-//typedef std::pair<float, int> HueCount;
 typedef std::pair<HSV, int> HsvCount;
 typedef std::tuple<int, int, int> RGB;
 enum SORT_BY { HUE, COUNT };
@@ -50,6 +48,10 @@ public:
     Pixel operator-(const Pixel& other) const
     {
         return Pixel { r - other.r, g - other.g, b - other.b, a - other.a };
+    }
+
+    RGB rgb() {
+        return RGB { (int)(r * 255), (int)(g * 255), (int)(b * 255) };
     }
 
     std::string toString() {
