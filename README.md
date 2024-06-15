@@ -5,7 +5,7 @@ Shell script which extracts colors from image and saves the hex codes as an colo
 The installation is easy. Just put the shell script in your ```$HOME/.config/theme-manager``` directory.
 
 ## Usage
-    theme-generator.sh <IMAGE_PATH> <OPTION> ...
+    theme-generator <IMAGE_PATH> <OPTION> ...
  
     Options:
         -f      formats     Output format Option. Default value is g. Can be multiple values  
