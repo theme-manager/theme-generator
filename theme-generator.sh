@@ -2,7 +2,7 @@
 
 printUsage() {
     echo "Usage:
-    theme-generator.sh [IMAGE_PATH] [OPTIONS]
+    theme-generator <IMAGE_PATH> <OPTION> ...
     
 Options:
     -h  --help              Show this help message
@@ -27,13 +27,27 @@ Options:
 # 4 - wrong configuration file
 # 5 - internal error
 
-if ! [ -f "$1" ]; then
-    echo "Specified image file does not exist"
-    exit 1
-else 
-    srcImage="$1"
-    shift
-fi
+# Prints an given error message and returns with the given error code
+# $1 - exit code
+# $2 - error message
+printErr() {
+    echo "Error: $2" >&2
+    echo "Use -h or --help to display help" >&2
+    exit "$1"
+}
+
+# Prints a given warning message and optionally returns with the given exit code
+# $1 - warning message
+# [$2 - exit code]
+printWarning() {
+    echo "$1" >&3
+    [ -n "$2" ] && exit "$2"
+}
+
+[ -r "$1" ] || printErr 1 "Specified image file does not exist or is not readable"
+
+srcImage="$1"
+shift
 
 res=256
 num=5
@@ -41,23 +55,20 @@ saveHexFile=false
 saveRgbFile=false
 output="$HOME/.config/theme-manager/output/"
 
-which convert >/dev/null 2>&1 || { echo "Error: ImageMagick CLI tools not found" >&2; exit 1; }
+which convert >/dev/null 2>&1 || printErr 2 "ImageMagick CLI tools not found"
 
 checkOutputDir() {
     if [ -d "$1" ]; then 
         output="$1"
     else
-        echo "Specified output directory does not exist. Do you want to create the directory '$1'? (y/N)"
+        echo "Output directory '$1' does not exist. Do you want to create it? (y/N)"
         read -r answer
-        if [ "$answer" = "y" ] || [ "$answer" = "Y" ]; then
-            echo "$1"
-            mkdir -p "$1" || echo "Failed to create directory '$2'" && exit 3
-            output="$1"
-            echo "Directory created"
-        else 
-            echo "Aborting..."
-            exit 3
-        fi
+        [ "$answer" != "y" ] && [ "$answer" != "Y" ] && printWarning "Aborting..." 3
+
+        echo "$1"
+        mkdir -p "$1" || printErr 3 "Failed to create directory '$2'"
+        output="$1"
+        echo "Directory created"
     fi
 }
 
@@ -71,7 +82,8 @@ createColorFilesInTmp() {
 copyAndRemoveFilesFromTmp() {
     if "$saveHexFile"; then
         cp "/tmp/colors_hex.txt" "${output}colors/colors-hex.txt"
-    fi; if [ "$saveRgbFile" ]; then
+    fi
+    if "$saveRgbFile"; then
         cut -d ' ' -f 2 "/tmp/colors_trim.txt" > "/tmp/colors_rgb.txt"
         uniq "/tmp/colors_rgb.txt" | head -n "$num" | sed "s/(//g" | sed "s/)//g" | sed "s/,/ /g" > "/tmp/colors_rgb_uniq.txt"
         cp "/tmp/colors_rgb_uniq.txt" "${output}colors/"colors-rgb.txt
@@ -116,35 +128,26 @@ convertAndSaveAsPNG() {
 while [ "$#" -gt 0 ]; do
     case "$1" in
         -h|--help) printUsage; exit 0 ;;
-        -s)   if [ "$2" != "" ]; then 
-                    res="$2"
-                    shift 2
-                else 
-                    echo "Option '$1' requires an argument";
-                    exit 2
-                fi ;;
-        -n)   if [ "$2" != "" ]; then 
-                    num="$2"
-                    shift 2
-                else 
-                    echo "Option '$1' requires an argument" 
-                    exit 2
-                fi ;;
-        -f)   if [ "$2" != "" ]; then 
-                    echo "$2" | grep -q "h" && saveHexFile=true
-                    echo "$2" | grep -q "r" && saveRgbFile=true
-                    echo "$2" | grep -q "g" && convertAndSaveAsCssForGtk "$res" "$num"
-                    echo "$2" | grep -q "h" && convertAndSaveAsCssForHtml "$res" "$num"
-                    echo "$2" | grep -q "p" && convertAndSaveAsPNG "$res" "$num"
-                    shift 2
-                else 
-                    echo "Option '$1' requires at least one argument";
-                    exit 2
-                fi ;;
-        -o) checkOutputDir "$2"; shift 2 ;;
-        *)
-            echo "Invalid option: '$1'"
-            exit 2 ;;
+        -s)   
+            [ "$2" != "" ] || printErr 2 "Option '$1' requires an argument"
+            res="$2"
+            shift 2 ;;
+        -n)   
+            [ "$2" != "" ] || printErr 2 "Option '$1' requires an argument"
+            num="$2"
+            shift 2 ;;
+        -f)   
+            [ "$2" != "" ] || printErr 2 "Option '$1' requires at least one argument"
+            echo "$2" | grep -q "h" && saveHexFile=true
+            echo "$2" | grep -q "r" && saveRgbFile=true
+            echo "$2" | grep -q "g" && convertAndSaveAsCssForGtk "$res" "$num"
+            echo "$2" | grep -q "h" && convertAndSaveAsCssForHtml "$res" "$num"
+            echo "$2" | grep -q "p" && convertAndSaveAsPNG "$res" "$num"
+            shift 2 ;;
+        -o) 
+            checkOutputDir "$2"
+            shift 2 ;;
+        *) printErr 2 "Invalid option: '$1'" ;;
     esac
 done
 
