@@ -160,3 +160,21 @@ if [ -d "${output}Wallpaper/" ]; then
 fi
 mkdir -p "${output}Wallpaper"
 cp "$srcImage" "${output}Wallpaper/wallpaper.$fileFormat"
+
+# Create the blurred version of the wallpaper
+magick "$srcImage" -blur 20x20 "${output}Wallpaper/wallpaper_blurred.$fileFormat"
+
+# Create the square cutout of the image
+imageWidth="$(magick identify -format '%width' ${srcImage})"
+imageHeight="$(magick identify -format '%width' ${srcImage})"
+width="$(( imageWidth * 60 / 100 ))"
+height="$(( imageHeight * 60 / 100 ))"
+# Make the image dimensions squared
+if [ "$width" -le "$height" ]; then
+    height="$width"
+else
+    width="$height"
+fi
+xOffset="$(( $(( imageWidth - width )) / 2 ))"
+yOffset="$(( $(( imageHeight - height )) / 2 ))"
+magick "$srcImage" -crop "${width}x${height}+{xOffset}+{yOffset}" "${output}Wallpaper/wallpaper_cutout.$fileFormat"
