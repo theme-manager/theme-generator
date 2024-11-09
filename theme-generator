@@ -121,7 +121,7 @@ saveRgbFile=false
 output="$HOME/.config/theme-manager/output/"
 
 # Check if imagemagick is installed
-which convert >/dev/null 2>&1 || printErr 2 "ImageMagick CLI tools not found"
+which magick >/dev/null 2>&1 || printErr 2 "ImageMagick CLI tools not found"
 
 # check if usage has to be printed
 if [ "$1" = "" ] || [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
@@ -173,8 +173,8 @@ cp "$srcImage" "${output}Wallpaper/wallpaper.$fileFormat"
 magick "$srcImage" -blur 20x20 "${output}Wallpaper/wallpaper_blurred.$fileFormat"
 
 # Create the square cutout of the image
-imageWidth="$(magick identify -format '%width' ${srcImage})"
-imageHeight="$(magick identify -format '%width' ${srcImage})"
+imageWidth="$(magick identify -format '%w' ${srcImage})"
+imageHeight="$(magick identify -format '%w' ${srcImage})"
 width="$(( imageWidth * 60 / 100 ))"
 height="$(( imageHeight * 60 / 100 ))"
 # Make the image dimensions squared
