@@ -61,7 +61,7 @@ checkOutputDir() {
 }
 
 createColorFilesInTmp() {
-    convert "$srcImage" -geometry "${res}x${res}" -colors "$num" -unique-colors -scale 4000% "/tmp/colors.txt"
+    magick "$srcImage" -geometry "${res}x${res}" -colors "$num" -unique-colors -scale 4000% "/tmp/colors.txt"
     tail -n +2 "/tmp/colors.txt" > "/tmp/colors_trim.txt"
     cut -d ' ' -f 4 "/tmp/colors_trim.txt" > "/tmp/colors_cut.txt" 
     uniq "/tmp/colors_cut.txt" | head -n "$num" > "/tmp/colors_hex.txt"
@@ -110,7 +110,7 @@ convertAndSaveAsCssForHtml() {
 
 convertAndSaveAsPNG() {
     echo " - Converting image to theme color stripe..."
-    convert "$srcImage" -geometry "${res}x${res}" -colors "$num" -unique-colors -scale 4000% "${output}colors/colors.png"
+    magick "$srcImage" -geometry "${res}x${res}" -colors "$num" -unique-colors -scale 4000% "${output}colors/colors.png"
 }
 
 # Set the default values
@@ -185,4 +185,4 @@ else
 fi
 xOffset="$(( $(( imageWidth - width )) / 2 ))"
 yOffset="$(( $(( imageHeight - height )) / 2 ))"
-magick "$srcImage" -crop "${width}x${height}+{xOffset}+{yOffset}" "${output}Wallpaper/wallpaper_cutout.$fileFormat"
+magick "$srcImage" -crop "${width}x${height}+${xOffset}+${yOffset}" "${output}Wallpaper/wallpaper_cutout.$fileFormat"
